@@ -18,6 +18,7 @@ public class AuthController {
     // 로그인 (POST /api/auth/login)
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+
         LoginResponse response = authService.authenticate(request);
 
         if (response != null) {

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 *
 *
 * lstm 학습시킬때 나온 거
-* ==================================================
 // 시계열 데이터 스케일링 파라미터
 const seqScalerParams = {
     Heartrate: { min: 34.0, max: 154.0 },
@@ -29,7 +28,6 @@ const staticScalerParams = {
     Gender: { min: 0.0, max: 1.0 },
     RHR: { min: 42.0, max: 76.0 },
 };
-==================================================
 * */
 @Component
 public class LstmInputScaler {

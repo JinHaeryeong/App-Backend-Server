@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dasom.dasomServer.DAO.HealthMapper">
+
+    <insert id="insertHealthData">
+        INSERT INTO daily_health_logs (silver_id, heart_rate, step_count, calories_burned, oxygen, total_sleep_min, deep_min, light_min, rem_min, wake_min)
+        VALUES (#{silverId}, #{heartRateAvg}, #{walkingSteps}, #{calories},#{spo2}, #{sleepDurationMin}, ${sleepStageDeepMin}, #{sleepStageLightMin}, #{sleepStageRemMin}, {sleepStageWakeMin})
+    </insert>
+
+    <select id="findLastHealthData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
+        SELECT *
+        FROM health_data
+        WHERE silver_id = #{silverId}
+        ORDER BY timestamp DESC
+            LIMIT 1
+    </select>
+
+    <select id="findSequenceData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
+        SELECT *
+        FROM health_data
+        WHERE silver_id = #{silverId}
+          AND timestamp BETWEEN #{startTime} AND #{endTime}
+        ORDER BY timestamp ASC
+            LIMIT #{limit}
+    </select>
+
+    <select id="findMinHeartRateDuringDeepSleep" resultType="java.lang.Double">
+        SELECT MIN(heart_rate)
+        FROM health_data
+        WHERE user_id = #{userId}
+          AND timestamp >= #{oneWeekAgo}
+          AND sleep_stage = 'deep'
+    </select>
+
+</mapper>

@@ -26,9 +26,11 @@ public class SecurityConfig {
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 로그인과 회원가입 경로는 인증 없이 접근 허용
-                        .requestMatchers("/api/auth/**", "/api/users/**").permitAll()
+                        // 죄송한데 실험용으로 걍 전부 허용할게요
+                                .anyRequest().permitAll()
+//                        .requestMatchers("/api/auth/**", "/api/users/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
                 );
         return http.build();
     }

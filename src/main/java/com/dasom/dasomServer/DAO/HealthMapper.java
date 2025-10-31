@@ -1,7 +1,7 @@
 package com.dasom.dasomServer.DAO;
 
 
-import com.dasom.dasomServer.DTO.HealthDataRequest;
+import com.dasom.dasomServer.DTO.HealthRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -13,10 +13,10 @@ import java.util.Optional;
 public interface HealthMapper {
     
     //새로운 데이터 저장
-    void insertHealthData(HealthDataRequest healthDataRequest);
+    void insertHealthData(HealthRequest healthDataRequest);
     
     //들어오는 값이 없을때 이전 값을 불러와서 덮어쓰기 하기위해 필요한거
-    HealthDataRequest findLastHealthData(@Param("silverId") String silverId);
+    Optional<HealthRequest> findLastHealthData(@Param("silverId") String silverId);
 
     /**
      * 특정 시간 범위 내에서 LSTM의 시퀀스 (N_STEPS=6)를 구축하기 위한 데이터 조회.
@@ -26,12 +26,14 @@ public interface HealthMapper {
      * @param limit 조회할 최대 개수 (6개)
      * @return DataPoint 리스트 (오래된 순)
      */
-    List<HealthDataRequest> findSequenceData (
+    List<HealthRequest> findSequenceData (
             @Param("silverId") String silverId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("limit") int limit
     );
+
+    int countBySilverId(@Param("silverId") String silverId);
 
     Optional<Double> findMinHeartRateDuringDeepSleep(@Param("userId") String userId, @Param("oneWeekAgo") LocalDateTime oneWeekAgo);
 }

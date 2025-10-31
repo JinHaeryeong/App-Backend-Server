@@ -9,4 +9,5 @@ public class LoginResponse {
     private String accessToken; // 인증 토큰 (JWT 등)
     private Long userId;
     private String username;
+    private String gender;
 }

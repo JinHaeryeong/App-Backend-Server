@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.mybatis.spring.annotation.MapperScan;
 
-@MapperScan(basePackages = "com.dasom.dasomServer.DAO")
+@MapperScan(basePackages = "com.dasom.dasomServer.dao")
 @SpringBootApplication
 public class DasomServerApplication {
 

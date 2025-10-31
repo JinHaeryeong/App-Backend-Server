@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dasom.dasomServer.dao.UserDAO">
+
+    <insert id="insertUser" parameterType="com.dasom.dasomServer.dto.RegisterRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO silvers (
+            login_id,
+            password,
+            name,
+            birth_date,
+            gender,
+            caregiver_id
+        ) VALUES (
+                     #{loginId},
+                     #{password},
+                     #{username},
+                     #{birth},
+                     #{gender},
+                     #{caregiverId}
+                 )
+    </insert>
+
+    <select id="existsByLoginId" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM silvers WHERE login_id = #{loginId}
+    </select>
+
+    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.dto.User">
+        SELECT
+            id,
+            login_id AS loginId,
+            password,
+            name AS name,
+            gender,
+            birth_date AS birthDate,
+            caregiver_id AS caregiverId
+        FROM silvers  WHERE login_id = #{loginId}
+    </select>
+
+    <select id="selectUserById" parameterType="Long" resultType="com.dasom.dasomServer.dto.User">
+        SELECT
+            id,
+            login_id AS loginId,
+            password,
+            name AS name,
+            gender,
+            birth_date AS birthDate,
+            caregiver_id AS caregiverId
+        FROM silvers  WHERE id = #{id}
+    </select>
+
+    <select id="selectAllUsers" resultType="com.dasom.dasomServer.dto.User">
+        SELECT
+            id,
+            login_id AS loginId,
+            password,
+            name AS name,
+            gender,
+            birth_date AS birthDate,
+            caregiver_id AS caregiverId
+        FROM silvers  </select>
+
+</mapper>

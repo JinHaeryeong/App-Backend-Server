@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,4 +9,6 @@ public class LoginResponse {
     private String accessToken; // 인증 토큰 (JWT 등)
     private Long userId;
     private String username;
+    private String gender;
+    private String birthdate;
 }

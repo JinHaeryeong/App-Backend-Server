@@ -1,7 +1,7 @@
-package com.dasom.dasomServer.Controller;
+package com.dasom.dasomServer.controller;
 
-import com.dasom.dasomServer.DTO.User;
-import com.dasom.dasomServer.Service.UserService;
+import com.dasom.dasomServer.dto.User;
+import com.dasom.dasomServer.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

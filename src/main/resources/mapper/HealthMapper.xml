@@ -1,36 +1,104 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.dasom.dasomServer.DAO.HealthMapper">
 
-    <insert id="insertHealthData">
-        INSERT INTO daily_health_logs (silver_id, heart_rate, step_count, calories_burned, oxygen, total_sleep_min, deep_min, light_min, rem_min, wake_min)
-        VALUES (#{silverId}, #{heartRateAvg}, #{walkingSteps}, #{calories},#{spo2}, #{sleepDurationMin}, ${sleepStageDeepMin}, #{sleepStageLightMin}, #{sleepStageRemMin}, {sleepStageWakeMin})
+    <!-- 새로운 데이터 저장: DTO 필드와 DB 칼럼명 매핑 -->
+    <!-- DB: step_count, calories_burned, oxygen / DTO: walkingSteps, totalCaloriesBurned, spo2 -->
+    <insert id="insertHealthData" parameterType="com.dasom.dasomServer.DTO.HealthRequest">
+        INSERT INTO daily_health_logs (
+            silver_id, heart_rate_avg, step_count, calories_burned, oxygen, log_date,
+            total_sleep_min, deep_min, light_min, rem_min, wake_min
+        )
+        VALUES (
+                   #{silverId}, #{heartRateAvg}, #{walkingSteps}, #{totalCaloriesBurned}, #{spo2}, NOW(),
+                   #{sleepDurationMin}, #{sleepStageDeepMin}, #{sleepStageLightMin}, #{sleepStageRemMin}, #{sleepStageWakeMin}
+               )
     </insert>
 
+    <!-- 마지막 레코드 조회 -->
+    <!-- DTO 필드명과 DB 칼럼명이 다른 경우 AS를 사용하여 매핑 -->
     <select id="findLastHealthData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
-        SELECT *
-        FROM health_data
+        SELECT
+            silver_id,
+            heart_rate_avg AS heartRateAvg,
+            step_count AS walkingSteps,
+            calories_burned AS totalCaloriesBurned,
+            oxygen AS spo2,
+            log_date,
+            total_sleep_min AS sleepDurationMin,
+            deep_min AS sleepStageDeepMin,
+            light_min AS sleepStageLightMin,
+            rem_min AS sleepStageRemMin,
+            wake_min AS sleepStageWakeMin
+        FROM daily_health_logs
         WHERE silver_id = #{silverId}
-        ORDER BY timestamp DESC
+        ORDER BY log_date DESC
             LIMIT 1
     </select>
 
+    <!-- 시퀀스 데이터 조회 -->
     <select id="findSequenceData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
-        SELECT *
-        FROM health_data
+        SELECT
+            silver_id,
+            heart_rate_avg AS heartRateAvg,
+            step_count AS walkingSteps,
+            calories_burned AS totalCaloriesBurned,
+            oxygen AS spo2,
+            log_date,
+            total_sleep_min AS sleepDurationMin,
+            deep_min AS sleepStageDeepMin,
+            light_min AS sleepStageLightMin,
+            rem_min AS sleepStageRemMin,
+            wake_min AS sleepStageWakeMin
+        FROM daily_health_logs
         WHERE silver_id = #{silverId}
-          AND timestamp BETWEEN #{startTime} AND #{endTime}
-        ORDER BY timestamp ASC
+          AND log_date BETWEEN #{startTime} AND #{endTime}
+        ORDER BY log_date ASC
             LIMIT #{limit}
     </select>
 
+    <!-- RHR 계산을 위한 최소 심박수 조회 (Deep Sleep 기준) -->
     <select id="findMinHeartRateDuringDeepSleep" resultType="java.lang.Double">
-        SELECT MIN(heart_rate)
-        FROM health_data
-        WHERE user_id = #{userId}
-          AND timestamp >= #{oneWeekAgo}
-          AND sleep_stage = 'deep'
+        SELECT MIN(heart_rate_avg)
+        FROM daily_health_logs
+        WHERE silver_id = #{silverId}
+        AND log_date BETWEEN #{startDate} AND #{endDate}
+        AND deep_min > 0  <!-- 딥슬립 상태였음을 필터링 (daily_health_logs 칼럼 deep_min 사용) -->
     </select>
+
+    <!-- 모든 사용자 ID 조회 (RHR 스케줄러용) -->
+    <select id="findAllSilverIds" resultType="java.lang.String">
+        SELECT silver_id FROM silvers
+    </select>
+
+    <!-- LSTM 정적 입력 특성 조회를 위한 사용자 정보 조회 -->
+    <select id="findUserInfo" resultType="com.dasom.dasomServer.DAO.HealthMapper$StaticUserInfo">
+        SELECT gender, birthday, rhr
+        FROM silvers
+        WHERE silver_id = #{silverId}
+    </select>
+
+    <!-- RHR 업데이트 -->
+    <update id="updateRhr">
+        UPDATE silvers
+        SET rhr = #{rhr}
+        WHERE silver_id = #{silverId}
+    </update>
+
+    <!-- 데이터 개수 조회 -->
+    <select id="countBySilverId" resultType="int">
+        SELECT COUNT(*) FROM daily_health_logs WHERE silver_id = #{silverId}
+    </select>
+
+
+    <!-- LSTM 분석 결과 저장 -->
+    <insert id="insertAnalysisResult">
+        INSERT INTO health_result_logs (silver_id, label, log_date)
+        VALUES (#{silverId}, #{label}, NOW())
+    </insert>
+
+
 
 </mapper>

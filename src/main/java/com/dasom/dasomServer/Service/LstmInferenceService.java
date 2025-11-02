@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.Service;
 
+import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
@@ -10,38 +11,39 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource; // Resource import
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
-/**
- * ONNX Runtime을 사용하여 LSTM 모델 추론을 관리하고 슬라이딩 윈도우를 처리합니다.
- * 모든 DB 작업은 HealthDataRequest 객체로 통일하여 수행합니다.
- */
 @Service
 @Slf4j
 public class LstmInferenceService {
 
     private final HealthMapper dataMapper;
-    private final LstmInputScaler scaler;
+    private final LstmInputScaler scaler; // 이 클래스는 정규화 로직이 있다고 가정
     private OrtEnvironment environment;
     private OrtSession session;
 
-    // 💡 수정: Resource 타입 주입 시, 경로 앞에 'classpath:' 프리픽스를 명시적으로 붙여야 합니다.
     @Value("classpath:model/lstm_personalized_model_final_v2.onnx")
     private Resource onnxModelResource;
 
-    private static final int N_STEPS = LstmInputScaler.N_STEPS; // 6
-    private static final int N_SEQ_FEATURES = 8; // 4 cont + 4 ohe
-    private static final int N_STATIC_FEATURES = 3; // Age, Gender, RHR
+    private static final int N_STEPS = 6;
+    private static final int N_SEQ_FEATURES = 8;
+    private static final int N_STATIC_FEATURES = 3;
+    private final double DEFAULT_RHR = 70.0;
     private String[] classLabels = {"정상", "주의", "위험"};
 
     public LstmInferenceService(HealthMapper dataMapper, LstmInputScaler scaler) {
@@ -49,35 +51,24 @@ public class LstmInferenceService {
         this.scaler = scaler;
     }
 
+    // ONNX 초기화 (생략 없이 최종 코드로 포함)
     @PostConstruct
     public void init() {
         File modelFile = null;
         try {
             environment = OrtEnvironment.getEnvironment();
-
-            // Resource에서 InputStream을 가져와 임시 파일로 복사
             modelFile = File.createTempFile("onnx_model", ".onnx");
+
             try (InputStream inputStream = onnxModelResource.getInputStream()) {
                 Files.copy(inputStream, modelFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                log.error("ONNX 모델 파일을 임시 파일로 복사하는 데 실패했습니다.", e);
-                throw e; // 복사 실패 시 즉시 예외 발생
             }
-
-            // 임시 파일 경로를 사용하여 ONNX Session 생성
             session = environment.createSession(modelFile.getAbsolutePath(), new OrtSession.SessionOptions());
             log.info("ONNX LSTM 모델 로드 성공: {}", onnxModelResource.getFilename());
-
-            // JVM 종료 시 임시 파일 삭제 예약
             modelFile.deleteOnExit();
 
         } catch (Exception e) {
             log.error("ONNX Model 초기화에 실패했습니다. 모델 파일과 경로, 의존성을 확인해보세요.", e);
-
-            // 초기화 실패 시 임시 파일이 생성되었다면 삭제
-            if (modelFile != null) {
-                modelFile.delete();
-            }
+            if (modelFile != null) modelFile.delete();
             throw new RuntimeException("ONNX 모델 로드 실패", e);
         }
     }
@@ -100,27 +91,28 @@ public class LstmInferenceService {
         try {
             LocalDateTime newRecordTime = LocalDateTime.now();
 
+            // Minute을 Boolean 플래그로 변환 (LSTM 요구사항)
+            healthDataRequest.setDeepSleep(healthDataRequest.getSleepStageDeepMin() > 0);
+            healthDataRequest.setRemSleep(healthDataRequest.getSleepStageRemMin() > 0);
+            healthDataRequest.setLightSleep(healthDataRequest.getSleepStageLightMin() > 0);
+            healthDataRequest.setAwakeSleep(healthDataRequest.getSleepStageWakeMin() > 0);
+
             Optional<HealthRequest> lastRecordOptional = dataMapper.findLastHealthData(silverId);
 
             if (lastRecordOptional.isPresent()) {
                 HealthRequest lastRecord = lastRecordOptional.get();
-
                 fillMissingDataPoints(lastRecord, newRecordTime);
             }
 
-            dataMapper.insertHealthData(healthDataRequest); // DB의 CURRENT_TIMESTAMP에 의해 logDate 저장됨
+            dataMapper.insertHealthData(healthDataRequest);
 
-
-            int currentCount = dataMapper.countBySilverId(silverId);
-
-            if (currentCount < N_STEPS) {
-                String message = String.format("데이터 저장 완료. LSTM 분석을 위해 %d개 데이터가 더 필요합니다 (현재 %d개).",
-                        N_STEPS - currentCount, currentCount);
-                return ApiResponse.success(message);
+            if (dataMapper.countBySilverId(silverId) < N_STEPS) {
+                return ApiResponse.success(
+                        String.format("데이터 저장 완료. LSTM 분석을 위해 %d개 데이터가 더 필요합니다.", N_STEPS - dataMapper.countBySilverId(silverId))
+                );
             }
 
-            String analysisResult = triggerSlidingWindowAnalysis(silverId, newRecordTime); // newRecordTime을 기준으로 분석
-
+            String analysisResult = triggerSlidingWindowAnalysis(silverId, newRecordTime);
             return ApiResponse.success("분석 완료 및 결과 반환", analysisResult);
 
         } catch (Exception e) {
@@ -129,32 +121,18 @@ public class LstmInferenceService {
         }
     }
 
-
     //  내부 로직 메서드
 
-    /**
-     * 누락된 10분은 이전걸로 채우기
-     */
     private void fillMissingDataPoints(HealthRequest lastRecord, LocalDateTime newRecordTime) {
         LocalDateTime lastRecordTime = lastRecord.getLogDate();
-
-        if (lastRecordTime == null) {
-            log.error("마지막 레코드에 logDate가 없어 결측치 처리를 건너뜁니다.");
-            return;
-        }
+        if (lastRecordTime == null) return;
 
         LocalDateTime fillTime = lastRecordTime.plusMinutes(10);
-
-        while (fillTime.isBefore(newRecordTime.minusSeconds(1))) { // 1초 여유를 두어 현재 요청과 겹치지 않게 함
-            log.warn("데이터 비어있음 감지. 결측치 채움: {}", fillTime);
-
+        while (fillTime.isBefore(newRecordTime.minusSeconds(1))) {
             HealthRequest fill = createFillDataPoint(lastRecord);
-
-            fill.setLogDate(fillTime); // 정확한 결측 시간 설정
-
-            dataMapper.insertHealthData(fill); // DB에 삽입
-
-            fillTime = fillTime.plusMinutes(10); // 다음 10분 간격으로 이동
+            fill.setLogDate(fillTime);
+            dataMapper.insertHealthData(fill);
+            fillTime = fillTime.plusMinutes(10);
         }
     }
 
@@ -163,71 +141,150 @@ public class LstmInferenceService {
         HealthRequest fill = new HealthRequest();
         fill.setSilverId(lastRecord.getSilverId());
 
+        // LOCF: 이전 값을 그대로 복사
         fill.setHeartRateAvg(lastRecord.getHeartRateAvg());
-        fill.setSpo2(lastRecord.getSpo2()); // int 타입 Spo2
+        fill.setSpo2(lastRecord.getSpo2());
 
-        // 활동 특성 (결측된 10분 동안 활동이 없었다고 가정 -> 0으로 채움)
+        // 활동/수면: 결측 시 활동/수면 없음 (0) 및 Boolean=False, 상태= NONE으로 채움
         fill.setWalkingSteps(0);
-        fill.setTotalCaloriesBurned(0); // DTO의 int 타입으로 가정
-
-        // 수면 특성 (세션 기반이므로 누락된 10분에는 0으로 채움)
+        fill.setTotalCaloriesBurned(0);
         fill.setSleepDurationMin(0);
-        fill.setSleepStageWakeMin(0);
+        fill.setSleepStageWakeMin(1);
         fill.setSleepStageDeepMin(0);
         fill.setSleepStageRemMin(0);
         fill.setSleepStageLightMin(0);
 
+        fill.setDeepSleep(false);
+        fill.setRemSleep(false);
+        fill.setLightSleep(false);
+        fill.setAwakeSleep(true);
+        fill.setCurrentSleepStage("AWAKE"); // 미착용/데이터 없음 상태 명시
 
         return fill;
     }
 
-    /** * 새로운 데이터 수신 시 슬라이딩 윈도우를 구축하고 추론을 실행 */
-    private String triggerSlidingWindowAnalysis(String userId, LocalDateTime currentTime) throws OrtException {
+    /** 새로운 데이터 수신 시 슬라이딩 윈도우를 구축하고 추론을 실행 */
+    private String triggerSlidingWindowAnalysis(String silverId, LocalDateTime currentTime) throws OrtException {
         if (session == null) return "모델 로드 안됨";
 
-        // 쿼리 시간 범위 설정 및 Mapper를 통해 시퀀스 데이터 조회
         LocalDateTime startTime = currentTime.minusMinutes((N_STEPS - 1) * 10L).minusSeconds(30);
         LocalDateTime endTime = currentTime.plusSeconds(30);
 
-        // Mapper의 findSequenceData 메서드를 사용
-        List<HealthRequest> rawSequence = dataMapper.findSequenceData(
-                userId,
-                startTime,
-                endTime,
-                N_STEPS);
+        List<HealthRequest> rawSequence = dataMapper.findSequenceData(silverId, startTime, endTime, N_STEPS);
+        if (rawSequence.size() < N_STEPS) return "INSUFFICIENT_DATA";
 
-        // 데이터 개수 확인 (6개가 안 되면 분석 실행 불가)
-        if (rawSequence.size() < N_STEPS) {
-            return "INSUFFICIENT_DATA";
-        }
-
-        // 모델 입력 데이터 변환 및 정규화
         float[] seqContInput = new float[N_STEPS * N_SEQ_FEATURES];
-        float[] staticInput = new float[N_STATIC_FEATURES];
+        float[] staticInput = createStaticInput(silverId); // silverId 기반 정적 특성 조회
 
         createSequentialInput(rawSequence, seqContInput);
-        staticInput = createStaticInput(rawSequence.get(N_STEPS - 1)); // 최신 데이터로 정적 특성 준비
-
-        // ONNX 텐서 생성 및 추론 실행
-        return runInference(seqContInput, staticInput);
+        return runInference(silverId, seqContInput, staticInput);
     }
 
-    // ... (createSequentialInput, createStaticInput, runInference 메서드 생략 - 이전 답변과 동일) ...
+    /** 정적 특성 텐서(Age, Gender, RHR)를 구성 */
+    private float[] createStaticInput(String silverId) {
+        // Mapper에서 StaticUserInfo DTO 및 findUserInfo 메서드가 정의되어 있다고 가정
+        HealthMapper.StaticUserInfo userInfo = dataMapper.findUserInfo(silverId);
 
-    /** HealthDataRequest 리스트를 LSTM 입력 시퀀스 텐서 형식으로 변환합니다. */
+        // Age 계산
+        int age = (int) ChronoUnit.YEARS.between(userInfo.getBirthday(), LocalDate.now());
+
+        // Gender 변환 ('M'/'F'를 1.0f/0.0f로)
+        float genderValue = (userInfo.getGender() != null && userInfo.getGender().toUpperCase().startsWith("M")) ? 1.0f : 0.0f;
+
+        // RHR 처리 및 정규화
+        double validRHR = userInfo.getRhr();
+        if (validRHR <= 0.0) {
+            log.warn("Silver ID {}의 RHR이 0.0입니다. 기본값 {}을 사용합니다.", silverId, DEFAULT_RHR);
+            validRHR = DEFAULT_RHR;
+        }
+
+        // 정적 특성 정규화
+        double[] scaledStatic = scaler.scaleStaticFeatures(age, (int)genderValue, validRHR);
+
+        float[] staticInput = new float[N_STATIC_FEATURES];
+        IntStream.range(0, N_STATIC_FEATURES).forEach(i -> staticInput[i] = (float) scaledStatic[i]);
+
+        return staticInput;
+    }
+
+
+    /** HealthDataRequest 리스트를 LSTM 입력 시퀀스 텐서 형식으로 변환 */
     private void createSequentialInput(List<HealthRequest> sequence, float[] seqContInput) {
-        // DataPoint 대신 HealthDataRequest 필드를 사용하도록 수정해야 합니다.
+        // LSTM 입력 시퀀스 배열 (6 steps x 8 features)을 채움
+        for (int i = 0; i < N_STEPS; i++) {
+            HealthRequest data = sequence.get(i);
+            int startIdx = i * N_SEQ_FEATURES;
+
+            // 연속형 4개 정규화 (Heartrate, SPO2, Steps, Calories)
+            double[] scaledCont = scaler.scaleSeqContFeatures(
+                    data.getHeartRateAvg(),
+                    data.getSpo2(),
+                    data.getWalkingSteps(),
+                    data.getTotalCaloriesBurned()
+            );
+
+            // 정규화된 연속형 데이터 복사 (인덱스 0 ~ 3)
+            for (int j = 0; j < scaledCont.length; j++) {
+                seqContInput[startIdx + j] = (float) scaledCont[j];
+            }
+
+            // OHE (Boolean) 데이터 복사 (인덱스 4 ~ 7)
+            // 순서: DEEP, LIGHT, REM, AWAKE (학습 코드 순서와 동일)
+            seqContInput[startIdx + 4] = data.isDeepSleep() ? 1.0f : 0.0f;
+            seqContInput[startIdx + 5] = data.isLightSleep() ? 1.0f : 0.0f;
+            seqContInput[startIdx + 6] = data.isRemSleep() ? 1.0f : 0.0f;
+            seqContInput[startIdx + 7] = data.isAwakeSleep() ? 1.0f : 0.0f;
+        }
     }
 
-    /** HealthDataRequest를 정적 특성 텐서 형식으로 변환합니다. */
-    private float[] createStaticInput(HealthRequest latestPoint) {
-        // DataPoint 대신 HealthDataRequest 필드를 사용하도록 수정해야 함
-        return new float[N_STATIC_FEATURES]; // 임시 반환
-    }
+    private String runInference(String silverId, float[] seqInput, float[] staticInput) throws OrtException {
+        if (session == null) return "모델 로드 실패";
 
-    /** ONNX Runtime을 사용하여 추론을 실행 */
-    private String runInference(float[] seqInput, float[] staticInput) throws OrtException {
-        // 이전에 제공된 runInference 내용을 여기에 복사
-        return "Simulated Result"; // 임시 반환
+        OnnxTensor seqTensor = null;
+        OnnxTensor statTensor = null;
+
+        try {
+            // 시퀀스 텐서 생성 (Batch Size=1, N_STEPS=6, N_SEQ_FEATURES=8)
+            seqTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(seqInput), new long[]{1, N_STEPS, N_SEQ_FEATURES});
+
+            // 정적 텐서 생성 (Batch Size=1, N_STATIC_FEATURES=3)
+            statTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(staticInput), new long[]{1, N_STATIC_FEATURES});
+
+            // ONNX 입력 이름 매핑 (학습 코드의 input_names와 동일해야 함)
+            Map<String, OnnxTensor> inputs = Map.of(
+                    "input_sequence", seqTensor,
+                    "input_static", statTensor
+            );
+
+            // 모델 실행
+            OrtSession.Result result = session.run(inputs);
+
+            // 결과 해석 (소프트맥스 확률 값)
+            float[][] rawProbabilities = (float[][]) result.get(0).getValue();
+            float[] probabilities = rawProbabilities[0]; // 배치 크기 1
+
+            // 최고 확률 클래스 찾기
+            int predictedClass = 0;
+            float maxProb = 0;
+            for (int i = 0; i < probabilities.length; i++) {
+                if (probabilities[i] > maxProb) {
+                    maxProb = probabilities[i];
+                    predictedClass = i;
+                }
+            }
+
+            String label = classLabels[predictedClass];
+            log.info("LSTM 추론 결과: Label={}, 확률={:.4f}", label, maxProb);
+
+            dataMapper.insertAnalysisResult(silverId, label);
+            return label;
+
+        } catch (OrtException e) {
+            log.error("ONNX 추론 실행 중 오류 발생", e);
+            throw e;
+        } finally {
+            if (seqTensor != null) seqTensor.close();
+            if (statTensor != null) statTensor.close();
+        }
     }
 }

@@ -27,13 +27,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    private final UserDAO userMapper; // 💡 MyBatis DAO (Mapper.xml과 연결)
+    private final UserDAO userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final ImageService imageService; // 💡 파일 저장/URL 변환 서비스
+    private final ImageService imageService;
 
-    @Transactional // 💡 회원가입/파일 저장을 하나의 트랜잭션으로 묶음
+    @Transactional
     @Override
-    public LoginResponse createUser(RegisterRequest request, List<MultipartFile> imageFiles) {
+    public LoginResponse createUser(RegisterRequest request, MultipartFile profileImage) {
         log.info("[START] createUser. LoginId: {}", request.getLoginId());
 
         if (userMapper.existsByLoginId(request.getLoginId()) > 0) {
@@ -46,39 +46,36 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setName(request.getName());
         user.setGender(request.getGender());
         user.setBirthday(request.getBirthday());
-        // 💡 [수정] 중복 호출되는 userMapper.insertUser(user); 삭제 (이것이 오류의 원인)
 
-        // 3. 💡 [핵심] 부모 테이블(silvers)에 사용자를 먼저 INSERT
+        // 💡 [필수] 부모 테이블(silvers)에 사용자를 먼저 INSERT
         userMapper.insertUser(user);
         log.info("[INFO] 'silvers' 테이블 저장 완료.");
 
-        // 4. 💡 [핵심] 자식 테이블(silvers_images)에 이미지 정보 INSERT
-        if (imageFiles != null && !imageFiles.isEmpty()) {
+        // 💡 [핵심 로직] 자식 테이블(silvers_images)에 이미지 정보 INSERT
+        if (profileImage != null && !profileImage.isEmpty()) {
             // 💡 이미지 파일이 있을 경우 로그 추가
-            log.info("[INFO] {}개의 이미지 파일 처리 시작.", imageFiles.size());
-            for (MultipartFile file : imageFiles) {
-                if (file.isEmpty()) continue;
+            log.info("[INFO] 프로필 이미지 파일 처리 시작: {}", profileImage.getOriginalFilename());
 
-                try {
-                    String storedFilename = imageService.saveFile(file);
+            try {
+                // 💡 단일 파일 저장 시도
+                String storedFilename = imageService.saveFile(profileImage);
 
-                    UserImage userImage = new UserImage();
-                    userImage.setSilverId(user.getLoginId()); // 💡 FK로 login_id 사용
-                    userImage.setOriginalFilename(file.getOriginalFilename());
-                    userImage.setStoredFilename(storedFilename);
+                UserImage userImage = new UserImage();
+                userImage.setSilverId(user.getLoginId()); // 💡 FK로 login_id 사용
+                userImage.setOriginalFilename(profileImage.getOriginalFilename());
+                userImage.setStoredFilename(storedFilename);
 
-                    userMapper.insertUserImage(userImage);
-                    log.info("[INFO] 'silvers_images' 테이블에 이미지 저장 완료: {}", storedFilename);
+                userMapper.insertUserImage(userImage);
+                log.info("[INFO] 'silvers_images' 테이블에 이미지 저장 완료: {}", storedFilename);
 
-                } catch (IOException e) {
-                    log.error("[ERROR] 파일 저장 오류. 롤백됩니다. LoginId: {}", request.getLoginId(), e);
-                    // 💡 IOException 발생 시 @Transactional에 의해 user INSERT까지 롤백됨
-                    throw new RuntimeException("이미지 저장에 실패했습니다.", e);
-                }
+            } catch (IOException e) {
+                log.error("[ERROR] 파일 저장 오류. 롤백됩니다. LoginId: {}", request.getLoginId(), e);
+                // 💡 IOException 발생 시 @Transactional에 의해 user INSERT까지 롤백됨
+                throw new RuntimeException("이미지 저장에 실패했습니다.", e);
             }
         } else {
-            // 💡 이미지 파일이 없을 경우 로그 추가
-            log.info("[INFO] 업로드된 이미지 파일 없음.");
+            // 💡 이미지 파일이 없을 경우 로그 추가 (DB에 NULL이 허용되므로 별도 처리 불필요)
+            log.info("[INFO] 업로드된 프로필 이미지 파일 없음.");
         }
 
 
@@ -105,18 +102,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    /**
-     * 💡 [수정됨] 반환 타입을 Optional<User>로 변경 (일관성 유지, NPE 방지)
-     */
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserById(Long id) {
         return Optional.ofNullable(userMapper.selectUserById(id));
     }
 
-    /**
-     * 💡 [수정됨] UserService 인터페이스 구현을 위해 누락되었던 메소드 추가
-     */
     @Override
     @Transactional(readOnly = true)
     public List<User> getAllUsers() {
@@ -124,11 +115,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userMapper.selectAllUsers();
     }
 
-
-    /**
-     * 💡 [핵심] Spring Security의 UserDetailsService 구현
-     * (로그인 시 Spring Security가 비밀번호 비교를 위해 호출)
-     */
     @Override
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
         User user = userMapper.findByLoginId(loginId);
@@ -180,7 +166,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                     .loginId(user.getLoginId())
                     .name(user.getName())
                     .gender(user.getGender())
-                    .birthday(user.getBirthday()) // 💡 birthday 값 포함
+                    .birthday(user.getBirthday())
                     .images(imageUrls) // 💡 이미지 목록 반환
                     .build();
         } else {

@@ -22,26 +22,26 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final ObjectMapper objectMapper; // 💡 3. (@RequiredArgsConstructor를 통해) JSON 변환기 주입
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> createUser(
 
-            // 💡 4. [핵심 수정] 415 오류 해결: DTO 대신 JSON 문자열(String)로 받음
             @RequestPart("user") String userJson,
 
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles) {
 
         try {
-            // 💡 5. [핵심] 받아온 JSON 문자열(userJson)을 RegisterRequest DTO로 수동 변환
             RegisterRequest request = objectMapper.readValue(userJson, RegisterRequest.class);
-
-            // 💡 6. 정상적으로 변환된 request 객체를 서비스로 전달
-            LoginResponse response = userService.createUser(request, imageFiles);
+            MultipartFile profileImage = null;
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                // 프로필 사진은 첫 번째 파일이라고 가정하고 추출
+                profileImage = imageFiles.get(0);
+            }
+            LoginResponse response = userService.createUser(request, (MultipartFile) profileImage);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
 
         } catch (JsonProcessingException e) {
-            // 💡 7. [추가] 'user' 파트의 JSON 형식이 잘못된 경우 (400 Bad Request)
             log.warn("Signup failed (JSON Parse Error): {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(LoginResponse.builder()
                     .success(false).message("회원가입 정보의 형식이 올바르지 않습니다.").build());
@@ -59,13 +59,11 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}")
-    // 💡 8. [수정] 반환 타입을 ResponseEntity<User>로 변경 (Optional을 직접 노출하지 않음)
     public ResponseEntity<User> getUser(@PathVariable Long id) {
 
-        // 💡 9. [수정] Service의 Optional 반환값을 처리하는 올바른 방법
         return userService.getUserById(id)
-                .map(user -> ResponseEntity.ok(user)) // 💡 .isPresent()
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND)); // 💡 .orElse()
+                .map(ResponseEntity::ok)
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/users")
@@ -75,7 +73,6 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    // 💡 '/login'은 파일이 없으므로 @RequestBody로 JSON을 받는 것이 맞습니다.
     public ResponseEntity<LoginResponse> loginUser(@RequestBody User loginInfo) {
         log.info("Login Info: {} ", loginInfo);
 

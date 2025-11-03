@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dasom.dasomServer.DAO.UserDAO">
+
+    <resultMap id="userWithImagesResultMap" type="com.dasom.dasomServer.DTO.User">
+        <id property="id" column="s_id"/>
+        <result property="loginId" column="s_login_id"/>
+        <result property="password" column="s_password"/>
+        <result property="name" column="s_name"/>
+        <result property="gender" column="s_gender"/>
+        <result property="createdAt" column="s_created_at"/>
+        <result property="caregiverId" column="s_caregiver_id"/>
+        <collection property="images" ofType="com.dasom.dasomServer.DTO.UserImage">
+            <id property="id" column="si_id"/>
+            <result property="silverId" column="si_silver_id"/>
+            <result property="originalFilename" column="si_original_filename"/>
+            <result property="storedFilename" column="si_stored_filename"/>
+        </collection>
+    </resultMap>
+
+    <insert id="insertUser" parameterType="com.dasom.dasomServer.DTO.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO silvers (
+            login_id,
+            password,
+            name,
+            gender,
+            caregiver_id,
+            birthday
+        ) VALUES (
+                     #{loginId},
+                     #{password},
+                     #{name},
+                     #{gender},
+                     #{caregiverId},
+                     #{birthday}
+                 )
+    </insert>
+
+    <insert id="insertUserImage" parameterType="com.dasom.dasomServer.DTO.UserImage"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO silvers_images
+            (silver_id, original_filename, stored_filename)
+        VALUES
+            (#{silverId}, #{originalFilename}, #{storedFilename})
+    </insert>
+
+    <select id="existsByLoginId" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM silvers WHERE login_id = #{loginId}
+    </select>
+
+    <select id="findByLoginId" parameterType="String" resultMap="userWithImagesResultMap">
+        SELECT
+            s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
+            s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
+            s.caregiver_id AS s_caregiver_id,
+            si.id AS si_id, si.silver_id AS si_silver_id,
+            si.original_filename AS si_original_filename,
+            si.stored_filename AS si_stored_filename
+        FROM
+            silvers s
+                LEFT JOIN
+            silvers_images si ON s.login_id = si.silver_id
+        WHERE
+            s.login_id = #{loginId}
+    </select>
+
+    <select id="selectUserById" parameterType="Long" resultMap="userWithImagesResultMap">
+        SELECT
+            s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
+            s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
+            s.caregiver_id AS s_caregiver_id,
+            si.id AS si_id, si.silver_id AS si_silver_id,
+            si.original_filename AS si_original_filename,
+            si.stored_filename AS si_stored_filename
+        FROM
+            silvers s
+                LEFT JOIN
+            silvers_images si ON s.login_id = si.silver_id
+        WHERE
+            s.id = #{id}
+    </select>
+
+    <select id="selectAllUsers" resultMap="userWithImagesResultMap">
+        SELECT
+            s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
+            s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
+            s.caregiver_id AS s_caregiver_id,
+            si.id AS si_id, si.silver_id AS si_silver_id,
+            si.original_filename AS si_original_filename,
+            si.stored_filename AS si_stored_filename
+        FROM
+            silvers s
+                LEFT JOIN
+            silvers_images si ON s.login_id = si.silver_id
+    </select>
+
+    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.DTO.User">
+        SELECT id, login_id AS loginId, password, name, gender, created_at, birthday, caregiver_id AS caregiverId
+        FROM silvers
+        WHERE login_id = #{loginId}
+    </select>
+
+    <delete id="deleteByLoginId" parameterType="String">
+        DELETE FROM silvers WHERE login_id = #{loginId}
+    </delete>
+
+</mapper>

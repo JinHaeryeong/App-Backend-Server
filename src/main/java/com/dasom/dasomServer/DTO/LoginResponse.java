@@ -1,0 +1,21 @@
+package com.dasom.dasomServer.DTO;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@Builder
+public class LoginResponse {
+    private boolean success;
+    private String message;
+
+    private String accessToken; // 인증 토큰 (JWT 등)
+    private String loginId;
+    private String name;
+    private char gender;
+    private LocalDate birthday;
+    private List<String> images;
+}

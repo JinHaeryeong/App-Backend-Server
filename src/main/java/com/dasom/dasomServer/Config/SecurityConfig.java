@@ -1,7 +1,11 @@
 package com.dasom.dasomServer.Config;
 
+import com.dasom.dasomServer.Security.JwtAuthenticationFilter;
+import com.dasom.dasomServer.Security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -17,7 +22,11 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Lazy
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,13 +51,17 @@ public class SecurityConfig {
                 )
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/health/data").authenticated()
+                                .requestMatchers("/api/health/**").authenticated()
                         // 로그인과 회원가입 경로는 인증 없이 접근 허용
                         // 죄송한데 실험용으로 걍 전부 허용할게요
-                                .anyRequest().permitAll()
-                        .requestMatchers("/api/auth/**", "/api/users/**").permitAll()
+//                                .anyRequest().permitAll()
+                        .requestMatchers("/api/login", "/api/signup", "/api/users/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class
                 );
         return http.build();
     }

@@ -4,7 +4,7 @@
 
 <mapper namespace="com.dasom.dasomServer.DAO.UserDAO">
 
-    <resultMap id="userWithImagesResultMap" type="com.dasom.dasomServer.DTO.User">
+    <resultMap id="userWithImagesResultMap" type="User">
         <id property="id" column="s_id"/>
         <result property="loginId" column="s_login_id"/>
         <result property="password" column="s_password"/>

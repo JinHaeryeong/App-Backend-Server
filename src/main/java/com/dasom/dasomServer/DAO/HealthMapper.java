@@ -1,6 +1,7 @@
 package com.dasom.dasomServer.DAO;
 
 
+import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
 import com.dasom.dasomServer.DTO.HealthRequest;
 import lombok.Data;
 import org.apache.ibatis.annotations.Mapper;
@@ -66,5 +67,6 @@ public interface HealthMapper {
             @Param("endDate") LocalDateTime endDate
     );
 
+    int upsertDailyHealthLog(DailyHealthLogRequest dailyHealthLogRequest);
     void insertAnalysisResult(@Param("silverId") String silverId, @Param("label") String label);
 }

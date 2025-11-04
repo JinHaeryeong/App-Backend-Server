@@ -5,9 +5,11 @@ import com.dasom.dasomServer.DTO.LoginResponse;
 import com.dasom.dasomServer.DTO.RegisterRequest;
 import com.dasom.dasomServer.DTO.User;
 import com.dasom.dasomServer.DTO.UserImage;
+import com.dasom.dasomServer.Security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,13 +25,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    private final UserDAO userMapper; // 💡 MyBatis DAO (Mapper.xml과 연결)
+
+    @Lazy
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDAO userMapper; // MyBatis DAO (Mapper.xml과 연결)
     private final PasswordEncoder passwordEncoder;
-    private final ImageService imageService; // 💡 파일 저장/URL 변환 서비스
+    private final ImageService imageService; //  파일 저장/URL 변환 서비스
 
     @Transactional // 💡 회원가입/파일 저장을 하나의 트랜잭션으로 묶음
     @Override
@@ -125,28 +130,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    /**
-     * 💡 [핵심] Spring Security의 UserDetailsService 구현
-     * (로그인 시 Spring Security가 비밀번호 비교를 위해 호출)
-     */
-    @Override
-    public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
-        User user = userMapper.findByLoginId(loginId);
 
-        if (user == null) {
-            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + loginId);
-        }
-
-        // 💡 Spring Security가 사용하는 UserDetails 객체로 변환
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getLoginId())
-                .password(user.getPassword()) // 💡 암호화된 비밀번호
-                .roles("USER")
-                .build();
-    }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse authenticateUser(String loginId, String rawPassword) {
         // 💡 이미지 목록을 포함한 User 정보 조회
         Optional<User> optionalUser = getUserByLoginId(loginId);
@@ -156,13 +143,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         User user = optionalUser.get();
+        boolean passwordMatches;
+
+        passwordMatches = rawPassword.equals(user.getPassword());
 
         // 💡 [핵심] 입력된 비밀번호(rawPassword)와 DB의 암호화된 비밀번호 비교
-        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+
+//        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+        if (passwordMatches) {
             log.info("LOGIN SUCCESS: User ID={}, loginId={}", user.getId(), user.getLoginId());
 
             // 💡 JWT 토큰 생성 (별도 서비스/Provider에서 구현 필요)
-            String jwtToken = "replace-with-real-jwt-token";
+            JwtTokenProvider.LoginTokenDto tokenDto = jwtTokenProvider.createToken(user.getLoginId());
+            String jwtAccessToken = tokenDto.accessToken;
 
             // 💡 [핵심] 'storedFilename'을 실제 접근 가능한 URL로 변환
             List<String> imageUrls = null;
@@ -176,7 +169,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return LoginResponse.builder()
                     .success(true)
                     .message("로그인 성공")
-                    .accessToken(jwtToken)
+                    .accessToken(jwtAccessToken)
                     .loginId(user.getLoginId())
                     .name(user.getName())
                     .gender(user.getGender())

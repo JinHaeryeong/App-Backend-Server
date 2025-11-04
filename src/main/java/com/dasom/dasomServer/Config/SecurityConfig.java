@@ -51,11 +51,13 @@ public class SecurityConfig {
                 )
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
+                                .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                                 .requestMatchers("/api/health/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         // 로그인과 회원가입 경로는 인증 없이 접근 허용
                         // 죄송한데 실험용으로 걍 전부 허용할게요
 //                                .anyRequest().permitAll()
-                        .requestMatchers("/api/login", "/api/signup", "/api/users/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -84,3 +86,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

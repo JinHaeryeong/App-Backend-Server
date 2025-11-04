@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setLoginId(request.getLoginId());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
+        user.setName(request.getUsername());
         user.setGender(request.getGender());
         user.setBirthday(request.getBirthday());
         // 💡 [수정] 중복 호출되는 userMapper.insertUser(user); 삭제 (이것이 오류의 원인)
@@ -149,8 +149,8 @@ public class UserServiceImpl implements UserService {
 
         // 💡 [핵심] 입력된 비밀번호(rawPassword)와 DB의 암호화된 비밀번호 비교
 
-//        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
-        if (passwordMatches) {
+        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+//        if (passwordMatches) {
             log.info("LOGIN SUCCESS: User ID={}, loginId={}", user.getId(), user.getLoginId());
 
             // 💡 JWT 토큰 생성 (별도 서비스/Provider에서 구현 필요)

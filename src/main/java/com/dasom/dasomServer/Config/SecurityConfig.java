@@ -3,12 +3,14 @@ package com.dasom.dasomServer.Config;
 import com.dasom.dasomServer.Security.JwtAuthenticationFilter;
 import com.dasom.dasomServer.Security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value; // [수정] @Value 임포트
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer; // [수정] WebSecurityCustomizer 임포트
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,6 +27,10 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // [수정] yml의 'file.access-path' 값을 주입받는 코드가 누락되어 추가합니다.
+    @Value("${file.access-path}")
+    private String accessPath; // "/uploads/"
+
     @Lazy
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -33,33 +39,34 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Spring Security 필터 체인을 무시하는 경로를 설정합니다. (403 해결)
+     */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // accessPath 변수를 사용하기 위해 @Value 선언이 반드시 필요합니다.
+        return (web) -> web.ignoring().requestMatchers(accessPath + "**");
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 // CORS 설정 적용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // [핵심] CSRF 비활성화: 403 Forbidden의 가장 흔한 원인.
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // HTTP Basic 인증과 폼 로그인을 사용하지 않도록 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                // 세션 미사용 설정 (토큰 기반 인증)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
-                                .requestMatchers("/api/health/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
-                                // 로그인과 회원가입 경로는 인증 없이 접근 허용
-                                // 죄송한데 실험용으로 걍 전부 허용할게요
-//                                .anyRequest().permitAll()
-                                // 그 외 모든 요청은 인증 필요
-                                .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                        .requestMatchers("/api/health/**").authenticated()
+                        // [수정] 하드코딩된 "/images/**" 대신 accessPath 변수를 사용합니다.
+                        .requestMatchers(HttpMethod.GET, accessPath + "**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider),
@@ -72,16 +79,17 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 모든 출처(Origin), 메서드, 헤더 허용 (개발 및 테스트 환경에 적합)
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // /api/** 경로에 대해 CORS 설정 적용
         source.registerCorsConfiguration("/api/**", configuration);
+
+        // [수정] 이미지 경로(accessPath)에 대해서도 CORS 설정을 반드시 추가해야 합니다.
+        source.registerCorsConfiguration(accessPath + "**", configuration);
 
         return source;
     }

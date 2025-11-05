@@ -4,7 +4,7 @@
 
 <mapper namespace="com.dasom.dasomServer.DAO.UserDAO">
 
-    <resultMap id="userWithImagesResultMap" type="com.dasom.dasomServer.DTO.User">
+    <resultMap id="userWithImagesResultMap" type="User">
         <id property="id" column="s_id"/>
         <result property="loginId" column="s_login_id"/>
         <result property="password" column="s_password"/>
@@ -18,6 +18,28 @@
             <result property="originalFilename" column="si_original_filename"/>
             <result property="storedFilename" column="si_stored_filename"/>
         </collection>
+    </resultMap>
+
+    <resultMap id="guardianResultMap" type="com.dasom.dasomServer.DTO.Guardian">
+        <id property="id" column="g_id"/>
+        <result property="silverId" column="g_silver_id"/>
+        <result property="name" column="g_name"/>
+        <result property="tel" column="g_tel"/>
+        <result property="relationship" column="g_relationship"/>
+        <result property="address" column="g_address"/>
+        <result property="createdAt" column="g_created_at"/>
+        <collection property="images" ofType="com.dasom.dasomServer.DTO.GuardianImage">
+            <id property="id" column="gi_id"/>
+            <result property="guardianId" column="gi_guardian_id"/>
+            <result property="originalFilename" column="gi_original_filename"/>
+            <result property="storedFilename" column="gi_stored_filename"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="userWithGuardiansResultMap" type="User">
+        <id property="id" column="s_id"/>
+        <result property="loginId" column="s_login_id"/>
+        <collection property="guardians" ofType="com.dasom.dasomServer.DTO.Guardian" resultMap="guardianResultMap"/>
     </resultMap>
 
     <insert id="insertUser" parameterType="com.dasom.dasomServer.DTO.User" useGeneratedKeys="true" keyProperty="id">
@@ -66,44 +88,28 @@
             s.login_id = #{loginId}
     </select>
 
-    <select id="selectUserById" parameterType="Long" resultMap="userWithImagesResultMap">
-        SELECT
-            s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
-            s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
-            s.caregiver_id AS s_caregiver_id,
-            si.id AS si_id, si.silver_id AS si_silver_id,
-            si.original_filename AS si_original_filename,
-            si.stored_filename AS si_stored_filename
-        FROM
-            silvers s
-                LEFT JOIN
-            silvers_images si ON s.login_id = si.silver_id
-        WHERE
-            s.id = #{id}
-    </select>
+    <insert id="insertGuardian" parameterType="com.dasom.dasomServer.DTO.Guardian" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO guardians (
+            silver_id, name, tel, relationship, address
+        ) VALUES (
+                     #{silverId}, #{name}, #{tel}, #{relationship}, #{address}
+                 )
+    </insert>
 
-    <select id="selectAllUsers" resultMap="userWithImagesResultMap">
-        SELECT
-            s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
-            s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
-            s.caregiver_id AS s_caregiver_id,
-            si.id AS si_id, si.silver_id AS si_silver_id,
-            si.original_filename AS si_original_filename,
-            si.stored_filename AS si_stored_filename
-        FROM
-            silvers s
-                LEFT JOIN
-            silvers_images si ON s.login_id = si.silver_id
-    </select>
+    <insert id="insertGuardianImage" parameterType="com.dasom.dasomServer.DTO.GuardianImage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO guardians_images (
+            guardian_id, original_filename, stored_filename
+        ) VALUES (
+                     #{guardianId}, #{originalFilename}, #{storedFilename}
+                 )
+    </insert>
 
-    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.DTO.User">
-        SELECT id, login_id AS loginId, password, name, gender, created_at, birthday, caregiver_id AS caregiverId
-        FROM silvers
-        WHERE login_id = #{loginId}
-    </select>
-
-    <delete id="deleteByLoginId" parameterType="String">
-        DELETE FROM silvers WHERE login_id = #{loginId}
-    </delete>
+    <insert id="insertSilverGuardianMap" parameterType="Map">
+        INSERT INTO silver_guardian_map (
+            silver_id, guardian_id
+        ) VALUES (
+                     #{silverId}, #{guardianId}
+                 )
+    </insert>
 
 </mapper>

@@ -8,5 +8,4 @@ public class UserImage {
     private String silverId; // 'silvers.login_id'를 참조
     private String originalFilename;
     private String storedFilename;
-
 }

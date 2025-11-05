@@ -3,7 +3,7 @@ package com.dasom.dasomServer.DAO;
 import com.dasom.dasomServer.DTO.User;
 import com.dasom.dasomServer.DTO.UserImage;
 import org.apache.ibatis.annotations.Mapper;
-
+import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 @Mapper

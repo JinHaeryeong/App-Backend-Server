@@ -1,7 +1,11 @@
 package com.dasom.dasomServer.Config;
 
+import com.dasom.dasomServer.Security.JwtAuthenticationFilter;
+import com.dasom.dasomServer.Security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -17,7 +22,11 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Lazy
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,24 +45,26 @@ public class SecurityConfig {
                 // HTTP Basic 인증과 폼 로그인을 사용하지 않도록 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-
-                // [핵심] 세션 비활성화: JWT/토큰 기반 인증을 위한 Stateless 설정
+                // 세션 미사용 설정 (토큰 기반 인증)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // 권한 설정
+                // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 회원가입 및 로그인 POST 요청 명시적 허용 (인증 없이 접근 가능)
-                        .requestMatchers(HttpMethod.POST, "/api/signup", "/api/login").permitAll()
-
-                        // CORS 사전 요청 (Pre-flight) OPTIONS 메서드 모두 허용
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 그 외 모든 요청은 인증 토큰이 필요함
-                        .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                                .requestMatchers("/api/health/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                                // 로그인과 회원가입 경로는 인증 없이 접근 허용
+                                // 죄송한데 실험용으로 걍 전부 허용할게요
+//                                .anyRequest().permitAll()
+                                // 그 외 모든 요청은 인증 필요
+                                .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class
                 );
-
         return http.build();
     }
 

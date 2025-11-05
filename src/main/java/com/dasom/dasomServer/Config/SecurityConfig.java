@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                         .requestMatchers("/api/health/**").authenticated()
+                        // "/api/guardians/"로 시작하는 모든 주소(/**)에 대해 접근을 허용합니다.
+                        .requestMatchers("/api/guardians/**").permitAll()
                         // [수정] 하드코딩된 "/images/**" 대신 accessPath 변수를 사용합니다.
                         .requestMatchers(HttpMethod.GET, accessPath + "**").permitAll()
                         .anyRequest().authenticated()

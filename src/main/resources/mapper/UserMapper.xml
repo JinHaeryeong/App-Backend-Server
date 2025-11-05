@@ -112,4 +112,19 @@
                  )
     </insert>
 
+    <select id="findGuardiansBySilverId" parameterType="String" resultMap="guardianResultMap">
+        SELECT
+            id           AS g_id,
+            silver_id    AS g_silver_id,
+            name         AS g_name,
+            tel          AS g_tel,
+            relationship AS g_relationship,
+            address      AS g_address,
+            created_at   AS g_created_at
+        FROM
+            guardians
+        WHERE
+            silver_id = #{silverId}
+    </select>
+
 </mapper>

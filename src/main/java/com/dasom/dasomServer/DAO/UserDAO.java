@@ -1,9 +1,10 @@
 package com.dasom.dasomServer.DAO;
 
+import com.dasom.dasomServer.DTO.Guardian;
 import com.dasom.dasomServer.DTO.User;
 import com.dasom.dasomServer.DTO.UserImage;
 import org.apache.ibatis.annotations.Mapper;
-
+import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 @Mapper
@@ -20,4 +21,8 @@ public interface UserDAO {
     User selectUserById(Long id);
 
     List<User> selectAllUsers();
+
+    String findGuardianStoredFilenameByGuardianId(Long guardianId);
+
+    List<Guardian> findGuardiansBySilverId(String silverId);
 }

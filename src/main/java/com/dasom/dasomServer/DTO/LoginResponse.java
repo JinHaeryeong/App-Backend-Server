@@ -3,7 +3,7 @@ package com.dasom.dasomServer.DTO;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -16,6 +16,6 @@ public class LoginResponse {
     private String loginId;
     private String name;
     private char gender;
-    private LocalDate birthday;
+    private Date birthday;
     private List<String> images;
 }

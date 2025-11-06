@@ -20,7 +20,7 @@ public class ImageService {
 
     // 💡 [추가] application.yml에 정의된 클라이언트 접근 URL (예: /images/)
     //    (WebConfig에서 /images/** 요청을 uploadDir로 매핑해야 함)
-    @Value("${file.access-url}")
+    @Value("${file.access-path}")
     private String accessUrl;
 
 

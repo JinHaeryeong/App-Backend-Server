@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setLoginId(request.getLoginId());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getUsername());
+        user.setName(request.getName());
         user.setGender(request.getGender());
         user.setBirthday(request.getBirthday());
         // 💡 [수정] 중복 호출되는 userMapper.insertUser(user); 삭제 (이것이 오류의 원인)

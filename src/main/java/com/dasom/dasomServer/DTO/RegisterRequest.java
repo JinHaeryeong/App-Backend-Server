@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class RegisterRequest {
     private String loginId;
     private String password;
-    private String username;
+    private String name;
     private LocalDate birthday;
     private char gender;
     private Long caregiverId;

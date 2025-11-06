@@ -127,4 +127,14 @@
             silver_id = #{silverId}
     </select>
 
+    <select id="findGuardianStoredFilenameByGuardianId" parameterType="Long" resultType="String">
+        SELECT
+            stored_filename
+        FROM
+            guardians_images
+        WHERE
+            guardian_id = #{guardianId}
+            LIMIT 1
+    </select>
+
 </mapper>

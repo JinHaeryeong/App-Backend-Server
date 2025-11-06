@@ -22,5 +22,7 @@ public interface UserDAO {
 
     List<User> selectAllUsers();
 
+    String findGuardianStoredFilenameByGuardianId(Long guardianId);
+
     List<Guardian> findGuardiansBySilverId(String silverId);
 }

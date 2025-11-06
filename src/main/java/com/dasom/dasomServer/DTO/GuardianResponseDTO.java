@@ -12,4 +12,5 @@ public class GuardianResponseDTO {
     private String tel;
     private String relationship;
     private String address;
+    private String profileImageUrl;
 }

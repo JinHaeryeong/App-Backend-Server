@@ -44,7 +44,7 @@ public class LstmInferenceService {
     private static final int N_SEQ_FEATURES = 8;
     private static final int N_STATIC_FEATURES = 3;
     private final double DEFAULT_RHR = 70.0;
-    private String[] classLabels = {"정상", "주의", "위험"};
+    private String[] classLabels = {"위험", "주의", "정상"};
 
     public LstmInferenceService(HealthMapper dataMapper, LstmInputScaler scaler) {
         this.dataMapper = dataMapper;
@@ -148,11 +148,11 @@ public class LstmInferenceService {
         // 활동/수면: 결측 시 활동/수면 없음 (0) 및 Boolean=False, 상태= NONE으로 채움
         fill.setWalkingSteps(0);
         fill.setTotalCaloriesBurned(0);
-        fill.setSleepDurationMin(0);
-        fill.setSleepStageWakeMin(1);
-        fill.setSleepStageDeepMin(0);
-        fill.setSleepStageRemMin(0);
-        fill.setSleepStageLightMin(0);
+        fill.setSleepDurationMin(0L);
+        fill.setSleepStageWakeMin(1L);
+        fill.setSleepStageDeepMin(0L);
+        fill.setSleepStageRemMin(0L);
+        fill.setSleepStageLightMin(0L);
 
         fill.setDeepSleep(false);
         fill.setRemSleep(false);

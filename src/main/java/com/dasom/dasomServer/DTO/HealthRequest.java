@@ -13,17 +13,17 @@ public class HealthRequest {
     private int walkingSteps;
     private double totalCaloriesBurned;
     private int spo2;
-    private double heartRateAvg;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private Long heartRateAvg;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime logDate;
 
 
 //    private int totalSleepDurationMin;
-    private int sleepDurationMin;
-    private int sleepStageWakeMin;
-    private int sleepStageDeepMin;
-    private int sleepStageRemMin;
-    private int sleepStageLightMin;
+    private Long sleepDurationMin;
+    private Long sleepStageWakeMin;
+    private Long sleepStageDeepMin;
+    private Long sleepStageRemMin;
+    private Long sleepStageLightMin;
 
     // LSTM Boolean 입력 필드 (서버에서 Minute을 변환)
     private boolean isDeepSleep;

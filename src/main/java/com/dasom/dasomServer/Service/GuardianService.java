@@ -16,7 +16,7 @@ public class GuardianService {
     private final UserDAO userDAO;
     private final ImageService imageService;
 
-    @Value("${file.access-path}")
+    @Value("${file.access_url}")
     private String serverBaseUrl;
 
     @Autowired

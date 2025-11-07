@@ -6,6 +6,7 @@ import com.dasom.dasomServer.Service.UserDetailService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -62,7 +63,11 @@ public class JwtTokenProvider {
                 .compact();
 
         // DB에 Refresh Token 저장/갱신
+
+        log.info("loginId == {}", loginId);
+        log.info("refreshToken === {}", refreshTokenValue);
         RefreshToken refreshToken = new RefreshToken(loginId, refreshTokenValue);
+        log.info("refreshToken 확인용 === {}", refreshToken);
         refreshTokenDAO.save(refreshToken);
 
         log.info("JWT Tokens created for {}. Access Exp: {} min", loginId, TimeUnit.MILLISECONDS.toMinutes(accessTokenExpirationMs));

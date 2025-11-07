@@ -14,9 +14,10 @@
     <!-- UPSERT (Insert OR Update) 로직 -->
     <insert id="save" parameterType="com.dasom.dasomServer.DTO.RefreshToken">
         INSERT INTO refresh_tokens (silver_id, refresh_token)
-        VALUES (#{refreshToken.silverId}, #{refreshToken.refreshToken})
+        VALUES (#{silverId}, #{refreshToken})
             ON DUPLICATE KEY UPDATE
-                                 refresh_token = VALUES(refresh_token)
+                                 refresh_token = VALUES(refresh_token),
+            created_at = NOW()
     </insert>
 
     <select id="findBySilverId" parameterType="String" resultMap="refreshTokenResultMap">

@@ -14,18 +14,18 @@ public class ImageService {
 
     private static final Logger log = LoggerFactory.getLogger(ImageService.class);
 
-    // 💡 application.yml에 정의된 파일 저장 실제 물리 경로 (예: /home/ubuntu/images/)
-    @Value("${file.upload-dir}")
+    // application.yml에 정의된 파일 저장 실제 물리 경로 (예: /home/ubuntu/images/)
+    @Value("${file.upload_dir}")
     private String uploadDir;
 
-    // 💡 [추가] application.yml에 정의된 클라이언트 접근 URL (예: /images/)
+    // [추가] application.yml에 정의된 클라이언트 접근 URL (예: /images/)
     //    (WebConfig에서 /images/** 요청을 uploadDir로 매핑해야 함)
-    @Value("${file.access-path}")
+    @Value("${file.access_url}")
     private String accessUrl;
 
 
     /**
-     * 💡 [수정됨] 1. UserServiceImpl에서 호출하도록 saveProfileImage -> saveFile로 이름 변경
+     * [수정됨] 1. UserServiceImpl에서 호출하도록 saveProfileImage -> saveFile로 이름 변경
      */
     public String saveFile(MultipartFile file) throws IOException {
 

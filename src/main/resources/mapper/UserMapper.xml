@@ -10,6 +10,7 @@
         <result property="password" column="s_password"/>
         <result property="name" column="s_name"/>
         <result property="gender" column="s_gender"/>
+        <result property="birthday" column="s_birthday" jdbcType="DATE"/>
         <result property="createdAt" column="s_created_at"/>
         <result property="caregiverId" column="s_caregiver_id"/>
         <collection property="images" ofType="com.dasom.dasomServer.DTO.UserImage">
@@ -35,6 +36,7 @@
             <result property="storedFilename" column="gi_stored_filename"/>
         </collection>
     </resultMap>
+
 
     <resultMap id="userWithGuardiansResultMap" type="User">
         <id property="id" column="s_id"/>
@@ -109,7 +111,7 @@
             s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
             s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
             s.caregiver_id AS s_caregiver_id,
-            si.id AS si_id, si.silver_id AS si_silver_id,
+            s.birthday AS s_birthday, si.id AS si_id, si.silver_id AS si_silver_id,
             si.original_filename AS si_original_filename,
             si.stored_filename AS si_stored_filename
         FROM

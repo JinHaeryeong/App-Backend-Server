@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +17,8 @@ public class LoginResponse {
     private String loginId;
     private String name;
     private char gender;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy", timezone = "Asia/Seoul")
     private Date birthday;
     private List<String> images;
 }

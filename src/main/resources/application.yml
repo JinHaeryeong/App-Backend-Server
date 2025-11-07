@@ -1,0 +1,7 @@
+server:
+  devtools:
+    livereload:
+      enabled: true
+spring:
+  profiles:
+    active: dev

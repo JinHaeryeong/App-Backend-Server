@@ -165,6 +165,8 @@ public class UserServiceImpl implements UserService {
                         .collect(Collectors.toList());
             }
 
+            log.info("로그인 성공: User ID={}, loginId={}, birthday={}", user.getId(), user.getLoginId(), user.getBirthday());
+
             // 💡 로그인 성공 응답 (토큰, 사용자 정보, 이미지 URL 목록 포함)
             return LoginResponse.builder()
                     .success(true)
@@ -173,8 +175,8 @@ public class UserServiceImpl implements UserService {
                     .loginId(user.getLoginId())
                     .name(user.getName())
                     .gender(user.getGender())
-                    .birthday(user.getBirthday()) // 💡 birthday 값 포함
-                    .images(imageUrls) // 💡 이미지 목록 반환
+                    .birthday(user.getBirthday())
+                    .images(imageUrls)
                     .build();
         } else {
             log.warn("LOGIN FAILED: Password mismatch for ID={}", loginId);

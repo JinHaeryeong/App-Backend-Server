@@ -17,6 +17,7 @@ public class Caregiver {
     private String name;
     private String affiliation;
     private String tel;
+    private String gender;
     private Timestamp createdAt;
     private String refreshToken;
     private String role; // 기본값 'caregiver'

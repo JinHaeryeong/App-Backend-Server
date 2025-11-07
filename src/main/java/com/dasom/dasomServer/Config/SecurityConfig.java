@@ -50,11 +50,18 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
-                                .requestMatchers("/api/health/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
-                                .requestMatchers("/api/guardians/**").authenticated()
+                        // 1. 회원가입/로그인 허용 (토큰 불필요)
+                        .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                        .requestMatchers("/api/health/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                        .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/caregivers/by-silver/**").hasAnyRole("USER", "ADMIN")
+
+                        // 2. 보호자 API는 인증된 사용자만 접근 허용
+                        //    (토큰이 유효해야 403 에러가 해결됩니다.)
+                        .requestMatchers("/api/guardians/**").authenticated()
+                        .requestMatchers("/api/caregivers/**").permitAll()
 
                                 // 로그인과 회원가입 경로는 인증 없이 접근 허용
                         // 죄송한데 실험용으로 걍 전부 허용할게요

@@ -10,6 +10,7 @@
         <result property="password" column="s_password"/>
         <result property="name" column="s_name"/>
         <result property="gender" column="s_gender"/>
+        <result property="birthday" column="s_birthday" jdbcType="DATE"/>
         <result property="createdAt" column="s_created_at"/>
         <result property="caregiverId" column="s_caregiver_id"/>
         <collection property="images" ofType="com.dasom.dasomServer.DTO.UserImage">
@@ -40,6 +41,38 @@
         <id property="id" column="s_id"/>
         <result property="loginId" column="s_login_id"/>
         <collection property="guardians" ofType="com.dasom.dasomServer.DTO.Guardian" resultMap="guardianResultMap"/>
+    </resultMap>
+
+    <resultMap id="caregiverResultMap" type="com.dasom.dasomServer.DTO.Caregiver">
+        <id property="id" column="c_id"/>
+        <result property="loginId" column="c_login_id"/>
+        <result property="password" column="c_password"/>
+        <result property="name" column="c_name"/>
+        <result property="affiliation" column="c_affiliation"/>
+        <result property="tel" column="c_tel"/>
+        <result property="createdAt" column="c_created_at"/>
+        <result property="refreshToken" column="c_refresh_token"/>
+        <result property="role" column="c_role"/>
+        <result property="gender" column="c_gender"/>
+    </resultMap>
+
+    <resultMap id="caregiverWithImagesResultMap" type="com.dasom.dasomServer.DTO.Caregiver">
+        <id property="id" column="c_id"/>
+        <result property="loginId" column="c_login_id"/>
+        <result property="password" column="c_password"/>
+        <result property="name" column="c_name"/>
+        <result property="affiliation" column="c_affiliation"/>
+        <result property="tel" column="c_tel"/>
+        <result property="createdAt" column="c_created_at"/>
+        <result property="refreshToken" column="c_refresh_token"/>
+        <result property="role" column="c_role"/>
+        <result property="gender" column="c_gender"/>
+        <collection property="images" ofType="com.dasom.dasomServer.DTO.CaregiverImage">
+            <id property="id" column="ci_id"/>
+            <result property="caregiverId" column="ci_caregiver_id"/>
+            <result property="originalFilename" column="ci_original_filename"/>
+            <result property="storedFilename" column="ci_stored_filename"/>
+        </collection>
     </resultMap>
 
     <insert id="insertUser" parameterType="com.dasom.dasomServer.DTO.User" useGeneratedKeys="true" keyProperty="id">
@@ -77,7 +110,7 @@
             s.id AS s_id, s.login_id AS s_login_id, s.password AS s_password,
             s.name AS s_name, s.gender AS s_gender, s.created_at AS s_created_at,
             s.caregiver_id AS s_caregiver_id,
-            si.id AS si_id, si.silver_id AS si_silver_id,
+            s.birthday AS s_birthday, si.id AS si_id, si.silver_id AS si_silver_id,
             si.original_filename AS si_original_filename,
             si.stored_filename AS si_stored_filename
         FROM
@@ -135,6 +168,89 @@
         WHERE
             guardian_id = #{guardianId}
             LIMIT 1
+    </select>
+
+    <insert id="insertCaregiver" parameterType="com.dasom.dasomServer.DTO.Caregiver" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO caregivers (
+            login_id,
+            password,
+            name,
+            affiliation,
+            tel,
+            gender
+        ) VALUES (
+                     #{loginId},
+                     #{password},
+                     #{name},
+                     #{affiliation},
+                     #{tel},
+                     #{gender}
+                 )
+    </insert>
+
+    <insert id="insertCaregiverImage" parameterType="com.dasom.dasomServer.DTO.CaregiverImage"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO caregivers_images
+            (caregiver_id, original_filename, stored_filename)
+        VALUES
+            (#{caregiverId}, #{originalFilename}, #{storedFilename})
+    </insert>
+
+    <select id="existsCaregiverByLoginId" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM caregivers WHERE login_id = #{loginId}
+    </select>
+
+    <select id="findCaregiverByLoginId" parameterType="String" resultMap="caregiverWithImagesResultMap">
+        SELECT
+            c.id AS c_id, c.login_id AS c_login_id, c.password AS c_password,
+            c.name AS c_name, c.affiliation AS c_affiliation, c.tel AS c_tel,
+            c.created_at AS c_created_at, c.refresh_token AS c_refresh_token,
+            c.role AS c_role, c.gender AS c_gender,
+            ci.id AS ci_id, ci.caregiver_id AS ci_caregiver_id,
+            ci.original_filename AS ci_original_filename,
+            ci.stored_filename AS ci_stored_filename
+        FROM
+            caregivers c
+                LEFT JOIN
+            caregivers_images ci ON c.login_id = ci.caregiver_id
+        WHERE
+            c.login_id = #{loginId}
+    </select>
+
+    <select id="findCaregiverById" parameterType="Long" resultMap="caregiverWithImagesResultMap">
+        SELECT
+            c.id AS c_id, c.login_id AS c_login_id, c.password AS c_password,
+            c.name AS c_name, c.affiliation AS c_affiliation, c.tel AS c_tel,
+            c.gender AS c_gender,
+            ci.id AS ci_id, ci.caregiver_id AS ci_caregiver_id,
+            ci.original_filename AS ci_original_filename,
+            ci.stored_filename AS ci_stored_filename
+        FROM
+            caregivers c
+                LEFT JOIN
+            caregivers_images ci ON c.login_id = ci.caregiver_id
+        WHERE
+            c.id = #{id}
+    </select>
+
+    <select id="findCaregiverBySilverLoginId" parameterType="String" resultMap="caregiverWithImagesResultMap">
+        SELECT
+            c.id AS c_id, c.login_id AS c_login_id, c.password AS c_password,
+            c.name AS c_name, c.affiliation AS c_affiliation, c.tel AS c_tel,
+            c.created_at AS c_created_at, c.refresh_token AS c_refresh_token,
+            c.role AS c_role, c.gender AS c_gender,
+
+            ci.id AS ci_id, ci.caregiver_id AS ci_caregiver_id,
+            ci.original_filename AS ci_original_filename,
+            ci.stored_filename AS ci_stored_filename
+        FROM
+            caregivers c
+                JOIN
+            silvers s ON c.id = s.caregiver_id
+                LEFT JOIN
+            caregivers_images ci ON c.login_id = ci.caregiver_id
+        WHERE
+            s.login_id = #{silverLoginId}
     </select>
 
     <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.DTO.User">

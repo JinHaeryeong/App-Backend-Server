@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -14,6 +15,8 @@ public class User {
     private String name;
     private char gender;
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy", timezone = "Asia/Seoul")
     private Date birthday;
     // 1:N 관계 (Silver 1 : SilverImage N)
     private List<UserImage> images;

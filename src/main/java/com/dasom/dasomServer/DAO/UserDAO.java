@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DAO;
 
+import com.dasom.dasomServer.DTO.Caregiver;
 import com.dasom.dasomServer.DTO.Guardian;
 import com.dasom.dasomServer.DTO.User;
 import com.dasom.dasomServer.DTO.UserImage;
@@ -21,6 +22,12 @@ public interface UserDAO {
     User selectUserById(Long id);
 
     List<User> selectAllUsers();
+
+    Caregiver findCaregiverById(Long id);
+
+    Caregiver findCaregiverBySilverLoginId(String silverLoginId);
+
+    Caregiver findCaregiverByLoginId(String loginId);
 
     String findGuardianStoredFilenameByGuardianId(Long guardianId);
 

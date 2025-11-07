@@ -38,10 +38,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * 이미지 리소스 접근 시 Spring Security 필터 체인을 완전히 무시합니다. (403 에러 방지)
-     * 이 설정이 가장 강력하며 권장됩니다.
-     */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         // accessPath 경로와 그 하위 경로(**)의 보안 검사를 완전히 제외합니다.
@@ -64,10 +60,13 @@ public class SecurityConfig {
                         // 1. 회원가입/로그인 허용 (토큰 불필요)
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                        .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/caregivers/by-silver/**").hasAnyRole("USER", "ADMIN")
 
                         // 2. 보호자 API는 인증된 사용자만 접근 허용
                         //    (토큰이 유효해야 403 에러가 해결됩니다.)
                         .requestMatchers("/api/guardians/**").authenticated()
+                        .requestMatchers("/api/caregivers/**").permitAll()
 
                         // 3. WebSecurityCustomizer에서 이미 이미지 경로를 무시했으므로, 여기서 permitAll() 제거
 

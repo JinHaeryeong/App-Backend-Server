@@ -8,8 +8,9 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CaregiverImage {
+
     private Long id;
-    private Long caregiverId;
+    private String caregiverId;
     private String originalFilename;
     private String storedFilename;
 }

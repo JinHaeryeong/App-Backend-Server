@@ -16,7 +16,7 @@ public class CaregiverService {
     private final ImageService imageService;
 
     // 서버 기본 URL (예: http://ip:port)을 application.properties에서 주입받음
-    @Value("${file.access-path}")
+    @Value("${file.access_url}")
     private String serverBaseUrl;
 
     @Autowired // 의존성 주입 (Dependency Injection)

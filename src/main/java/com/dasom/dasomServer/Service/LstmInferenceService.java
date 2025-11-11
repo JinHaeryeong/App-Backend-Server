@@ -44,7 +44,7 @@ public class LstmInferenceService {
     private static final int N_SEQ_FEATURES = 8;
     private static final int N_STATIC_FEATURES = 3;
     private final double DEFAULT_RHR = 70.0;
-    private String[] classLabels = {"위험", "주의", "정상"};
+    private String[] classLabels = {"위험", "정상", "주의"};
 
     public LstmInferenceService(HealthMapper dataMapper, LstmInputScaler scaler) {
         this.dataMapper = dataMapper;

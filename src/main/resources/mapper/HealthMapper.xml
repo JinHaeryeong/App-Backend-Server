@@ -95,7 +95,7 @@
 
     <!-- LSTM 분석 결과 저장 -->
     <insert id="insertAnalysisResult">
-        INSERT INTO health_result_log (silver_id, label, log_date)
+        INSERT INTO health_result_logs (silver_id, label, log_date)
         VALUES (#{silverId}, #{label}, NOW())
     </insert>
 

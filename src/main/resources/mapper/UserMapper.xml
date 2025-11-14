@@ -76,6 +76,13 @@
         </collection>
     </resultMap>
 
+    <resultMap id="silverMedicationResultMap" type="com.dasom.dasomServer.DTO.SilverMedication">
+        <id property="id" column="sm_id"/>
+        <result property="silverId" column="sm_silver_id"/>
+        <result property="medicationType" column="sm_medication_type"/>
+        <result property="notes" column="sm_notes"/>
+    </resultMap>
+
     <insert id="insertUser" parameterType="com.dasom.dasomServer.DTO.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO silvers (
             login_id,
@@ -252,6 +259,26 @@
             caregivers_images ci ON c.login_id = ci.caregiver_id
         WHERE
             s.login_id = #{silverLoginId}
+    </select>
+
+    <insert id="insertSilverMedication" parameterType="com.dasom.dasomServer.DTO.SilverMedication" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO silver_medications (
+            silver_id, medication_type, notes
+        ) VALUES (
+                     #{silverId}, #{medicationType}, #{notes}
+                 )
+    </insert>
+
+    <select id="findSilverMedicationsBySilverId" parameterType="String" resultMap="silverMedicationResultMap">
+        SELECT
+            id              AS sm_id,
+            silver_id       AS sm_silver_id,
+            medication_type AS sm_medication_type,
+            notes           AS sm_notes
+        FROM
+            silver_medications
+        WHERE
+            silver_id = #{silverId}
     </select>
 
 </mapper>

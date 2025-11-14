@@ -1,9 +1,6 @@
 package com.dasom.dasomServer.DAO;
 
-import com.dasom.dasomServer.DTO.Caregiver;
-import com.dasom.dasomServer.DTO.Guardian;
-import com.dasom.dasomServer.DTO.User;
-import com.dasom.dasomServer.DTO.UserImage;
+import com.dasom.dasomServer.DTO.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import java.util.List;
@@ -32,4 +29,6 @@ public interface UserDAO {
     String findGuardianStoredFilenameByGuardianId(Long guardianId);
 
     List<Guardian> findGuardiansBySilverId(String silverId);
+
+    List<SilverMedication> findSilverMedicationsBySilverId(String silverId);
 }

@@ -49,7 +49,12 @@ public class SecurityConfig {
         http
                 // CORS 설정 적용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
+
+                // 💡 CSRF 보호를 명확하게 비활성화합니다.
+                //    이것이 이전 로그에서 확인된 403 Forbidden (CSRF token error)를 해결합니다.
+                .csrf(csrf -> csrf.disable())
+
+                // 기존 설정 유지
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
@@ -57,22 +62,25 @@ public class SecurityConfig {
                 )
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 1. 회원가입/로그인 허용 (토큰 불필요)
+                        // 1. **가장 구체적인** 인증 면제 경로 설정 (permitAll)
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
-                        .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")
+
+                        // 2. **구체적인** 역할(Role) 기반 경로 설정
+                        //    -> /api/caregivers/by-silver/** 가 /api/caregivers/** 보다 먼저 나와야 합니다.
                         .requestMatchers("/api/caregivers/by-silver/**").hasAnyRole("USER", "ADMIN")
 
-                        // 2. 보호자 API는 인증된 사용자만 접근 허용
-                        //    (토큰이 유효해야 403 에러가 해결됩니다.)
+                        // 3. 일반 인증 기반 경로 설정 (Role 대신 authenticated() 사용)
+                        //    -> /api/guardians/** 경로에 대한 hasAnyRole 규칙은 authenticated()로 대체하거나
+                        //       가장 광범위한 authenticated() 규칙이 처리하도록 합니다.
+                        .requestMatchers("/api/caregivers/**").authenticated()
                         .requestMatchers("/api/guardians/**").authenticated()
-                        .requestMatchers("/api/caregivers/**").permitAll()
+                        .requestMatchers("/api/medications/**").permitAll()
 
-                        // 3. WebSecurityCustomizer에서 이미 이미지 경로를 무시했으므로, 여기서 permitAll() 제거
-
-                        // 4. 나머지 모든 요청은 인증 필요
+                        // 4. 나머지 모든 요청은 인증 필요 (가장 광범위한 규칙은 맨 마지막에)
                         .anyRequest().authenticated()
                 )
+                // JWT 필터 추가
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class

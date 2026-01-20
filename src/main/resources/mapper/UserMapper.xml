@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dasom.dasomServer.DAO.UserDAO">
+<mapper namespace="com.dasom.dasomServer.domain.user.mapper.UserMapper">
 
     <resultMap id="userWithImagesResultMap" type="User">
         <id property="id" column="s_id"/>

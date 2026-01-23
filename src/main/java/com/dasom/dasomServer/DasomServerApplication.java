@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @EnableScheduling
-@MapperScan(basePackages = "com.dasom.dasomServer.DAO")
 @EnableWebMvc
 @SpringBootApplication
 public class DasomServerApplication {

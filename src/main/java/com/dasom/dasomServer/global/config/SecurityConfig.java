@@ -51,7 +51,10 @@ public class SecurityConfig {
                         // 1. 회원가입/로그인 허용 (토큰 불필요)
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
-                        .requestMatchers("/api/health/**").authenticated()
+                        //테스트용
+                                .requestMatchers("/api/health/sequence-test").permitAll()
+                                .requestMatchers("/api/health/test/guardians").permitAll()
+                                .requestMatchers("/api/health/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/caregivers/by-silver/**").hasAnyRole("USER", "ADMIN")

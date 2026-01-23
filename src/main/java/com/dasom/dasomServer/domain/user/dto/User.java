@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.domain.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

@@ -13,7 +13,7 @@
         <result property="birthday" column="s_birthday" jdbcType="DATE"/>
         <result property="createdAt" column="s_created_at"/>
         <result property="caregiverId" column="s_caregiver_id"/>
-        <collection property="images" ofType="com.dasom.dasomServer.DTO.UserImage">
+        <collection property="images" ofType="com.dasom.dasomServer.domain.user.dto.UserImage">
             <id property="id" column="si_id"/>
             <result property="silverId" column="si_silver_id"/>
             <result property="originalFilename" column="si_original_filename"/>
@@ -21,7 +21,7 @@
         </collection>
     </resultMap>
 
-    <resultMap id="guardianResultMap" type="com.dasom.dasomServer.DTO.Guardian">
+    <resultMap id="guardianResultMap" type="com.dasom.dasomServer.domain.guardian.dto.Guardian">
         <id property="id" column="g_id"/>
         <result property="silverId" column="g_silver_id"/>
         <result property="name" column="g_name"/>
@@ -29,7 +29,7 @@
         <result property="relationship" column="g_relationship"/>
         <result property="address" column="g_address"/>
         <result property="createdAt" column="g_created_at"/>
-        <collection property="images" ofType="com.dasom.dasomServer.DTO.GuardianImage">
+        <collection property="images" ofType="com.dasom.dasomServer.domain.guardian.dto.GuardianImage">
             <id property="id" column="gi_id"/>
             <result property="guardianId" column="gi_guardian_id"/>
             <result property="originalFilename" column="gi_original_filename"/>
@@ -40,10 +40,10 @@
     <resultMap id="userWithGuardiansResultMap" type="User">
         <id property="id" column="s_id"/>
         <result property="loginId" column="s_login_id"/>
-        <collection property="guardians" ofType="com.dasom.dasomServer.DTO.Guardian" resultMap="guardianResultMap"/>
+        <collection property="guardians" ofType="com.dasom.dasomServer.domain.guardian.dto.Guardian" resultMap="guardianResultMap"/>
     </resultMap>
 
-    <resultMap id="caregiverResultMap" type="com.dasom.dasomServer.DTO.Caregiver">
+    <resultMap id="caregiverResultMap" type="com.dasom.dasomServer.domain.caregiver.dto.Caregiver">
         <id property="id" column="c_id"/>
         <result property="loginId" column="c_login_id"/>
         <result property="password" column="c_password"/>
@@ -56,7 +56,7 @@
         <result property="gender" column="c_gender"/>
     </resultMap>
 
-    <resultMap id="caregiverWithImagesResultMap" type="com.dasom.dasomServer.DTO.Caregiver">
+    <resultMap id="caregiverWithImagesResultMap" type="com.dasom.dasomServer.domain.caregiver.dto.Caregiver">
         <id property="id" column="c_id"/>
         <result property="loginId" column="c_login_id"/>
         <result property="password" column="c_password"/>
@@ -67,7 +67,7 @@
         <result property="refreshToken" column="c_refresh_token"/>
         <result property="role" column="c_role"/>
         <result property="gender" column="c_gender"/>
-        <collection property="images" ofType="com.dasom.dasomServer.DTO.CaregiverImage">
+        <collection property="images" ofType="com.dasom.dasomServer.domain.caregiver.dto.CaregiverImage">
             <id property="id" column="ci_id"/>
             <result property="caregiverId" column="ci_caregiver_id"/>
             <result property="originalFilename" column="ci_original_filename"/>
@@ -75,7 +75,7 @@
         </collection>
     </resultMap>
 
-    <insert id="insertUser" parameterType="com.dasom.dasomServer.DTO.User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertUser" parameterType="com.dasom.dasomServer.domain.user.dto.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO silvers (
             login_id,
             password,
@@ -93,7 +93,7 @@
                  )
     </insert>
 
-    <insert id="insertUserImage" parameterType="com.dasom.dasomServer.DTO.UserImage"
+    <insert id="insertUserImage" parameterType="com.dasom.dasomServer.domain.user.dto.UserImage"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO silvers_images
             (silver_id, original_filename, stored_filename)
@@ -121,7 +121,7 @@
             s.login_id = #{loginId}
     </select>
 
-    <insert id="insertGuardian" parameterType="com.dasom.dasomServer.DTO.Guardian" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertGuardian" parameterType="com.dasom.dasomServer.domain.guardian.dto.Guardian" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO guardians (
             silver_id, name, tel, relationship, address
         ) VALUES (
@@ -129,7 +129,7 @@
                  )
     </insert>
 
-    <insert id="insertGuardianImage" parameterType="com.dasom.dasomServer.DTO.GuardianImage" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertGuardianImage" parameterType="com.dasom.dasomServer.domain.guardian.dto.GuardianImage" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO guardians_images (
             guardian_id, original_filename, stored_filename
         ) VALUES (
@@ -170,7 +170,7 @@
             LIMIT 1
     </select>
 
-    <insert id="insertCaregiver" parameterType="com.dasom.dasomServer.DTO.Caregiver" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertCaregiver" parameterType="com.dasom.dasomServer.domain.caregiver.dto.Caregiver" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO caregivers (
             login_id,
             password,
@@ -188,7 +188,7 @@
                  )
     </insert>
 
-    <insert id="insertCaregiverImage" parameterType="com.dasom.dasomServer.DTO.CaregiverImage"
+    <insert id="insertCaregiverImage" parameterType="com.dasom.dasomServer.domain.caregiver.dto.CaregiverImage"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO caregivers_images
             (caregiver_id, original_filename, stored_filename)
@@ -253,7 +253,7 @@
             s.login_id = #{silverLoginId}
     </select>
 
-    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.DTO.User">
+    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.domain.user.dto.User">
         SELECT id, login_id AS loginId, password, name, gender, created_at, birthday, caregiver_id AS caregiverId
         FROM silvers
         WHERE login_id = #{loginId}

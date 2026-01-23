@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.caregiver.mapper;
 
-import com.dasom.dasomServer.DTO.Caregiver;
+import com.dasom.dasomServer.domain.caregiver.dto.Caregiver;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

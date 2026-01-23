@@ -1,16 +1,15 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.global.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
+// global/common/dto/BaseImage.java (공통 폴더에 위치)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CaregiverImage {
-
+public abstract class BaseImage {
     private Long id;
-    private String caregiverId;
     private String originalFilename;
     private String storedFilename;
 }

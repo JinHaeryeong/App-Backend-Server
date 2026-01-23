@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.domain.caregiver.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

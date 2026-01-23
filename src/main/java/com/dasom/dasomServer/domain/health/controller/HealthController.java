@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/health")
@@ -31,6 +34,21 @@ public class HealthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    // HealthController.java에 추가
+
+    @GetMapping("/sequence-test")
+    public ResponseEntity<?> getSequenceTestData(@RequestParam String silverId) {
+        // 현재 시간을 기준으로 최근 1시간(6개 데이터 분량) 범위 설정
+        LocalDateTime endTime = LocalDateTime.now().plusSeconds(30);
+        LocalDateTime startTime = endTime.minusMinutes(50).minusSeconds(30);
+
+        // 내부적으로 사용하던 MyBatis 쿼리 호출
+        // LstmInferenceService에 있는 로직을 테스트하기 위해 HealthService나 Mapper를 직접 호출
+        List<HealthRequest> sequence = healthService.findSequenceData(silverId, startTime, endTime, 6);
+
+        return ResponseEntity.ok(ApiResponse.success("조회 성공", sequence));
     }
 
     @PostMapping("/daily-log")

@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.guardian.controller;
 
-import com.dasom.dasomServer.DTO.GuardianResponseDTO;
+import com.dasom.dasomServer.domain.guardian.dto.GuardianResponseDTO;
 import com.dasom.dasomServer.domain.guardian.service.GuardianService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

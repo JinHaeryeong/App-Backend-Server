@@ -1,8 +1,7 @@
 package com.dasom.dasomServer.domain.caregiver.service;
 
-import com.dasom.dasomServer.domain.user.mapper.UserMapper;
-import com.dasom.dasomServer.DTO.Caregiver; // 요양보호사 엔티티/DTO
-import com.dasom.dasomServer.DTO.CaregiverlResponseDTO; // 최종 응답 DTO
+import com.dasom.dasomServer.domain.caregiver.dto.Caregiver; // 요양보호사 엔티티/DTO
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverlResponseDTO; // 최종 응답 DTO
 import com.dasom.dasomServer.domain.caregiver.mapper.CaregiverMapper;
 import com.dasom.dasomServer.infra.storage.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import java.util.Optional;
 @Service
 public class CaregiverService {
 
-    private final UserMapper userMapper;
     private final CaregiverMapper caregiverMapper;
     private final ImageService imageService;
 
@@ -23,8 +21,7 @@ public class CaregiverService {
     private String serverBaseUrl;
 
     @Autowired // 의존성 주입 (Dependency Injection)
-    public CaregiverService(UserMapper userMapper, CaregiverMapper caregiverMapper, ImageService imageService) {
-        this.userMapper = userMapper;
+    public CaregiverService(CaregiverMapper caregiverMapper, ImageService imageService) {
         this.caregiverMapper = caregiverMapper;
         this.imageService = imageService;
     }

@@ -1,7 +1,7 @@
 package com.dasom.dasomServer.domain.caregiver.controller;
 
 import com.dasom.dasomServer.domain.caregiver.service.CaregiverService;
-import com.dasom.dasomServer.DTO.CaregiverlResponseDTO;
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverlResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

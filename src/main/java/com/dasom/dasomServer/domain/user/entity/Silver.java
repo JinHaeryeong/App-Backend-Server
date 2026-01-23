@@ -1,11 +1,13 @@
 package com.dasom.dasomServer.domain.user.entity;
 
+import com.dasom.dasomServer.domain.user.dto.UserImage;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
+//@Entity
 @Table(name = "silvers")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,5 +30,5 @@ public class Silver {
 
     // 실시간 건강 데이터와의 관계 (1:N)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<UserImage> images = new ArrayList<>();
+    private List<SilverImage> images = new ArrayList<>();
 }

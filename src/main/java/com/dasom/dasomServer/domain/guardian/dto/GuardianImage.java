@@ -1,17 +1,11 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.domain.guardian.dto;
 
+import com.dasom.dasomServer.global.dto.BaseImage;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.util.List;
+import lombok.EqualsAndHashCode;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class GuardianImage {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class GuardianImage extends BaseImage {
     private Long guardianId;
-    private String originalFilename;
-    private String storedFilename;
 }

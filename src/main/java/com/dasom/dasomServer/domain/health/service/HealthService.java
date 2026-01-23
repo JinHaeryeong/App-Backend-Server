@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.domain.health.service;
 
+import com.dasom.dasomServer.DTO.HealthRequest;
 import com.dasom.dasomServer.domain.health.mapper.HealthMapper;
 import com.dasom.dasomServer.global.common.ApiResponse;
 import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
@@ -7,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -37,5 +41,12 @@ public class HealthService {
             log.error("일일 혈압 측정 데이터 처리 중 오류 발생: {}", silverId, e);
             return ApiResponse.error("일일 혈압 측정 데이터 처리 중 서버 오류 발생: " + e.getMessage(), "SERVER_ERROR");
         }
+    }
+
+    // HealthService.java
+
+    public List<HealthRequest> findSequenceData(String silverId, LocalDateTime startTime, LocalDateTime endTime, int nSteps) {
+        // MyBatis Mapper를 호출하여 시퀀스 데이터를 가져옴
+        return healthMapper.findSequenceData(silverId, startTime, endTime, nSteps);
     }
 }

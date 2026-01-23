@@ -2,7 +2,7 @@ package com.dasom.dasomServer.domain.user.controller;
 
 import com.dasom.dasomServer.DTO.LoginResponse;
 import com.dasom.dasomServer.DTO.RegisterRequest;
-import com.dasom.dasomServer.DTO.User;
+import com.dasom.dasomServer.domain.user.dto.User;
 import com.dasom.dasomServer.domain.user.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

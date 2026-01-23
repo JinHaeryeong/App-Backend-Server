@@ -1,7 +1,7 @@
 package com.dasom.dasomServer.domain.user.service;
 
 import com.dasom.dasomServer.domain.user.mapper.UserMapper;
-import com.dasom.dasomServer.DTO.User;
+import com.dasom.dasomServer.domain.user.dto.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

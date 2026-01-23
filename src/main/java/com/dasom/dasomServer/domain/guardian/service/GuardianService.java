@@ -1,9 +1,11 @@
 package com.dasom.dasomServer.domain.guardian.service;
 
+import com.dasom.dasomServer.domain.guardian.mapper.GuardianMapper;
 import com.dasom.dasomServer.domain.user.mapper.UserMapper;
-import com.dasom.dasomServer.DTO.Guardian;
-import com.dasom.dasomServer.DTO.GuardianResponseDTO;
+import com.dasom.dasomServer.domain.guardian.dto.Guardian;
+import com.dasom.dasomServer.domain.guardian.dto.GuardianResponseDTO;
 import com.dasom.dasomServer.infra.storage.ImageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,29 +14,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GuardianService {
 
-    private final UserMapper userMapper;
+    private final GuardianMapper guardianMapper;
     private final ImageService imageService;
 
     @Value("${file.access_url}")
     private String serverBaseUrl;
 
-    @Autowired
-    public GuardianService(UserMapper userMapper, ImageService imageService) {
-        this.userMapper = userMapper;
-        this.imageService = imageService;
-    }
 
     public List<GuardianResponseDTO> getGuardiansForApp(String silverId) {
 
-        List<Guardian> guardians = userMapper.findGuardiansBySilverId(silverId);
+        List<Guardian> guardians = guardianMapper.findGuardiansBySilverId(silverId);
 
         return guardians.stream()
                 .map(guardian -> {
 
                     Long guardianId = guardian.getId();
-                    String storedFilename = userMapper.findGuardianStoredFilenameByGuardianId(guardianId);
+                    String storedFilename = guardianMapper.findGuardianStoredFilenameByGuardianId(guardianId);
 
                     String profileImageUrl = null;
                     if (storedFilename != null && !storedFilename.isEmpty()) {

@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DTO;
 
+import com.dasom.dasomServer.domain.guardian.dto.GuardianImage;
 import lombok.Data;
 import java.sql.Timestamp;
 import java.util.List;

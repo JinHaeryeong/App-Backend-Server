@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DTO;
 
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverImage;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;

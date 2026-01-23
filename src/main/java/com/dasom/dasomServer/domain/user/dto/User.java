@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.DTO;
 
+import com.dasom.dasomServer.domain.user.dto.UserImage;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDateTime;

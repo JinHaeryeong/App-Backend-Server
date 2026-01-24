@@ -47,7 +47,7 @@ public class HealthLog {
     private Integer wakeMin;
 
 
-    @Transient // DB 컬럼은 안 만들지만 자바 코드에선 쓰겠다는 으ㅣㅡ미
+    @Transient // DB 컬럼은 안 만들지만 자바 코드에선 쓰겠다는 의미
     private boolean isDeepSleep;
     @Transient
     private boolean isRemSleep;

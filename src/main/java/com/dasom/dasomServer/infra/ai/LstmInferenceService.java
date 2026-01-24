@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -83,22 +85,26 @@ public class LstmInferenceService {
         }
     }
 
+    // save도 하고 count도 하니까
+    @Transactional
     public ApiResponse<?> processAndAnalyze(HealthRequest dto) {
         String silverId = dto.getSilverId();
         try {
             LocalDateTime now = LocalDateTime.now();
 
+            // 코파일럿이 지적한 부분 값이 null인지 체크 해줘야 nullPointerException 안터짐
             HealthLog newLog = HealthLog.builder()
                     .silverId(silverId)
                     .heartRate(dto.getHeartRateAvg() != null ? dto.getHeartRateAvg().intValue() : 0)
                     .stepCount(dto.getWalkingSteps())
                     .caloriesBurned(dto.getTotalCaloriesBurned())
-                    .oxygen((double) dto.getSpo2())
+                    .oxygen(dto.getSpo2() > 0 ? (double) dto.getSpo2() : null)
                     .logDate(dto.getLogDate() != null ? dto.getLogDate() : now)
-                    .deepMin(dto.getSleepStageDeepMin().intValue())
-                    .lightMin(dto.getSleepStageLightMin().intValue())
-                    .remMin(dto.getSleepStageRemMin().intValue())
-                    .wakeMin(dto.getSleepStageWakeMin().intValue())
+                    .totalSleepMin(dto.getSleepDurationMin() != null ? dto.getSleepDurationMin().intValue() : 0)
+                    .deepMin(dto.getSleepStageDeepMin() != null ? dto.getSleepStageDeepMin().intValue() : 0)
+                    .lightMin(dto.getSleepStageLightMin() != null ? dto.getSleepStageLightMin().intValue() : 0)
+                    .remMin(dto.getSleepStageRemMin() != null ? dto.getSleepStageRemMin().intValue() : 0)
+                    .wakeMin(dto.getSleepStageWakeMin() != null ? dto.getSleepStageWakeMin().intValue() : 0)
                     .build();
 
             healthLogRepository.findTop6BySilverIdOrderByLogDateDesc(silverId).stream()
@@ -107,8 +113,16 @@ public class LstmInferenceService {
 
             healthLogRepository.save(newLog);
 
-            if (healthLogRepository.countBySilverId(silverId) < N_STEPS) {
-                return ApiResponse.success(String.format("데이터 축적 중 (%d/%d)", healthLogRepository.countBySilverId(silverId), N_STEPS));
+            /* 
+            
+            수정함: count 값 변수에 담아서 쿼리 횟수 줄이기 (성능 최적화용) 
+            기존 코드는 DB 서버 갔다가 결과 가져오는 과정이 두번임 
+            고친 코드는 long count = healthLogRepository.countBySilverId(silverId);
+            에서 한번만 물어봄
+            */
+            long count = healthLogRepository.countBySilverId(silverId);
+            if (count < N_STEPS) {
+                return ApiResponse.success(String.format("데이터 축적 중 (%d/%d)", count, N_STEPS));
             }
 
             String analysisResult = triggerSlidingWindowAnalysis(silverId);
@@ -145,6 +159,8 @@ public class LstmInferenceService {
 
         List<HealthLog> sequence = healthLogRepository.findTop6BySilverIdOrderByLogDateDesc(silverId);
         if (sequence.size() < N_STEPS) return "INSUFFICIENT_DATA";
+
+        Collections.reverse(sequence);
 
         float[] seqContInput = new float[N_STEPS * N_SEQ_FEATURES];
         float[] staticInput = createStaticInput(silverId);

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dasom.dasomServer.domain.user.mapper.UserMapper">
+<mapper namespace="com.dasom.dasomServer.domain.silver.mapper.UserMapper">
 
     <resultMap id="userWithImagesResultMap" type="User">
         <id property="id" column="s_id"/>
@@ -13,7 +13,7 @@
         <result property="birthday" column="s_birthday" jdbcType="DATE"/>
         <result property="createdAt" column="s_created_at"/>
         <result property="caregiverId" column="s_caregiver_id"/>
-        <collection property="images" ofType="com.dasom.dasomServer.domain.user.dto.UserImage">
+        <collection property="images" ofType="com.dasom.dasomServer.domain.silver.dto.UserImage">
             <id property="id" column="si_id"/>
             <result property="silverId" column="si_silver_id"/>
             <result property="originalFilename" column="si_original_filename"/>
@@ -75,7 +75,7 @@
         </collection>
     </resultMap>
 
-    <insert id="insertUser" parameterType="com.dasom.dasomServer.domain.user.dto.User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertUser" parameterType="com.dasom.dasomServer.domain.silver.dto.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO silvers (
             login_id,
             password,
@@ -93,7 +93,7 @@
                  )
     </insert>
 
-    <insert id="insertUserImage" parameterType="com.dasom.dasomServer.domain.user.dto.UserImage"
+    <insert id="insertUserImage" parameterType="com.dasom.dasomServer.domain.silver.dto.UserImage"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO silvers_images
             (silver_id, original_filename, stored_filename)
@@ -253,7 +253,7 @@
             s.login_id = #{silverLoginId}
     </select>
 
-    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.domain.user.dto.User">
+    <select id="selectUserByLoginId" parameterType="String" resultType="com.dasom.dasomServer.domain.silver.dto.User">
         SELECT id, login_id AS loginId, password, name, gender, created_at, birthday, caregiver_id AS caregiverId
         FROM silvers
         WHERE login_id = #{loginId}

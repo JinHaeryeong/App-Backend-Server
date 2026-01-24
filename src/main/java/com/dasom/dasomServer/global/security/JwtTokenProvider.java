@@ -2,7 +2,7 @@ package com.dasom.dasomServer.global.security;
 
 import com.dasom.dasomServer.global.security.mapper.RefreshTokenMapper;
 import com.dasom.dasomServer.DTO.RefreshToken;
-import com.dasom.dasomServer.domain.user.service.UserDetailService;
+import com.dasom.dasomServer.domain.silver.service.UserDetailService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;

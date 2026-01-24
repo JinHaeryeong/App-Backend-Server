@@ -1,7 +1,9 @@
 package com.dasom.dasomServer.domain.health.service;
 
 import com.dasom.dasomServer.DTO.HealthRequest;
+import com.dasom.dasomServer.domain.health.entity.HealthLog;
 import com.dasom.dasomServer.domain.health.mapper.HealthMapper;
+import com.dasom.dasomServer.domain.health.repository.HealthLogRepository;
 import com.dasom.dasomServer.global.common.ApiResponse;
 import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class HealthService {
 
     private final HealthMapper healthMapper;
+    private final HealthLogRepository healthLogRepository;
 
     @Transactional
     public ApiResponse<?> upsertDailyHealthLog(DailyHealthLogRequest summaryRequest) {
@@ -45,6 +48,13 @@ public class HealthService {
 
     // HealthService.java
 
+    // JPA 테스트용~
+    public List<HealthLog> findRecentLogs(String silverId) {
+
+        return healthLogRepository.findTop6BySilverIdOrderByLogDateDesc(silverId);
+    }
+
+    // 테스트할때 쓴거
     public List<HealthRequest> findSequenceData(String silverId, LocalDateTime startTime, LocalDateTime endTime, int nSteps) {
         // MyBatis Mapper를 호출하여 시퀀스 데이터를 가져옴
         return healthMapper.findSequenceData(silverId, startTime, endTime, nSteps);

@@ -1,15 +1,17 @@
-package com.dasom.dasomServer.domain.user.entity;
+package com.dasom.dasomServer.domain.silver.entity;
 
-import com.dasom.dasomServer.domain.user.dto.UserImage;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
+@Entity
 @Table(name = "silvers")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Silver {
 
@@ -23,12 +25,14 @@ public class Silver {
     private String password;
     private String name;
     private char gender;
-    private java.sql.Date birthday;
+
+    private LocalDateTime birthday;
 
     @Column(columnDefinition = "DECIMAL(4,1) DEFAULT 0.0")
     private Double rhr;
 
     // 실시간 건강 데이터와의 관계 (1:N)
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "silver", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<SilverImage> images = new ArrayList<>();
 }

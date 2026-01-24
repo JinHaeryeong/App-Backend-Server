@@ -1,6 +1,7 @@
 package com.dasom.dasomServer.domain.health.controller;
 
 
+import com.dasom.dasomServer.domain.health.entity.HealthLog;
 import com.dasom.dasomServer.global.common.ApiResponse;
 import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
 import com.dasom.dasomServer.DTO.HealthRequest;
@@ -36,19 +37,15 @@ public class HealthController {
                 .body(response);
     }
 
-    // HealthController.java에 추가
-
+    // 테스트용 api
     @GetMapping("/sequence-test")
     public ResponseEntity<?> getSequenceTestData(@RequestParam String silverId) {
-        // 현재 시간을 기준으로 최근 1시간(6개 데이터 분량) 범위 설정
-        LocalDateTime endTime = LocalDateTime.now().plusSeconds(30);
-        LocalDateTime startTime = endTime.minusMinutes(50).minusSeconds(30);
+        log.info("JPA 기반 최적화 쿼리 실행: silverId = {}", silverId);
 
-        // 내부적으로 사용하던 MyBatis 쿼리 호출
-        // LstmInferenceService에 있는 로직을 테스트하기 위해 HealthService나 Mapper를 직접 호출
-        List<HealthRequest> sequence = healthService.findSequenceData(silverId, startTime, endTime, 6);
+        // 시간을 계산해서 넘길 필요 없이, JPA가 최신 6개를 알아서 가져옴
+        List<HealthLog> response = healthService.findRecentLogs(silverId);
 
-        return ResponseEntity.ok(ApiResponse.success("조회 성공", sequence));
+        return ResponseEntity.ok(ApiResponse.success("조회 성공", response));
     }
 
     @PostMapping("/daily-log")

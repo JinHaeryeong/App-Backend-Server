@@ -1,10 +1,10 @@
-package com.dasom.dasomServer.domain.user.service;
+package com.dasom.dasomServer.domain.silver.service;
 
-import com.dasom.dasomServer.domain.user.mapper.UserMapper;
+import com.dasom.dasomServer.domain.silver.mapper.UserMapper;
 import com.dasom.dasomServer.DTO.LoginResponse;
 import com.dasom.dasomServer.DTO.RegisterRequest;
-import com.dasom.dasomServer.domain.user.dto.User;
-import com.dasom.dasomServer.domain.user.dto.UserImage;
+import com.dasom.dasomServer.domain.silver.dto.User;
+import com.dasom.dasomServer.domain.silver.dto.UserImage;
 import com.dasom.dasomServer.infra.storage.ImageService;
 import com.dasom.dasomServer.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;

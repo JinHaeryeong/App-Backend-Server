@@ -1,8 +1,8 @@
-package com.dasom.dasomServer.domain.user.service;
+package com.dasom.dasomServer.domain.silver.service;
 
 import com.dasom.dasomServer.DTO.LoginResponse;
 import com.dasom.dasomServer.DTO.RegisterRequest;
-import com.dasom.dasomServer.domain.user.dto.User;
+import com.dasom.dasomServer.domain.silver.dto.User;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;

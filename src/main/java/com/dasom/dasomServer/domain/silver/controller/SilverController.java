@@ -1,9 +1,9 @@
-package com.dasom.dasomServer.domain.user.controller;
+package com.dasom.dasomServer.domain.silver.controller;
 
 import com.dasom.dasomServer.DTO.LoginResponse;
 import com.dasom.dasomServer.DTO.RegisterRequest;
-import com.dasom.dasomServer.domain.user.dto.User;
-import com.dasom.dasomServer.domain.user.service.UserService;
+import com.dasom.dasomServer.domain.silver.dto.User;
+import com.dasom.dasomServer.domain.silver.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:8080")
 @Slf4j
-public class UserController {
+public class SilverController {
 
     private final UserService userService;
     private final ObjectMapper objectMapper; // 💡 (@RequiredArgsConstructor를 통해) JSON 변환기 주입

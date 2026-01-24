@@ -1,7 +1,7 @@
-package com.dasom.dasomServer.domain.user.mapper;
+package com.dasom.dasomServer.domain.silver.mapper;
 
-import com.dasom.dasomServer.domain.user.dto.User;
-import com.dasom.dasomServer.domain.user.dto.UserImage;
+import com.dasom.dasomServer.domain.silver.dto.User;
+import com.dasom.dasomServer.domain.silver.dto.UserImage;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

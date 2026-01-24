@@ -1,10 +1,10 @@
-package com.dasom.dasomServer.domain.user.entity;
+package com.dasom.dasomServer.domain.silver.entity;
 
 import com.dasom.dasomServer.global.entity.BaseImage;
 import jakarta.persistence.*;
 import lombok.*;
 
-//@Entity
+@Entity
 @Table(name = "silvers_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

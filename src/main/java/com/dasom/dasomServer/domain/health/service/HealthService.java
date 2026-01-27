@@ -1,11 +1,11 @@
 package com.dasom.dasomServer.domain.health.service;
 
-import com.dasom.dasomServer.DTO.HealthRequest;
+import com.dasom.dasomServer.domain.health.dto.HealthRequest;
 import com.dasom.dasomServer.domain.health.entity.HealthLog;
 import com.dasom.dasomServer.domain.health.mapper.HealthMapper;
 import com.dasom.dasomServer.domain.health.repository.HealthLogRepository;
 import com.dasom.dasomServer.global.common.ApiResponse;
-import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
+import com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,18 +1,19 @@
 package com.dasom.dasomServer.domain.guardian.entity;
 
+import com.dasom.dasomServer.domain.silver.entity.Silver;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
+@Entity
 @Table(name = "guardians") // 실제 DB 테이블명
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자
 public class Guardian {
 
@@ -20,8 +21,10 @@ public class Guardian {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // id
 
-    @Column(name = "silver_id", nullable = false)
-    private String silverId; // 어르신 식별자
+    // String 대신 Silver 객체로 연관관계 매핑 (JOIN을 쓰기 위해)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "silver_id", referencedColumnName = "login_id") // DB 컬럼명에 맞춰 매핑
+    private Silver silver;
 
     @Column(nullable = false)
     private String name; // g_name

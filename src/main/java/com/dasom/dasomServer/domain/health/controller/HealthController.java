@@ -3,8 +3,8 @@ package com.dasom.dasomServer.domain.health.controller;
 
 import com.dasom.dasomServer.domain.health.entity.HealthLog;
 import com.dasom.dasomServer.global.common.ApiResponse;
-import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
-import com.dasom.dasomServer.DTO.HealthRequest;
+import com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest;
+import com.dasom.dasomServer.domain.health.dto.HealthRequest;
 import com.dasom.dasomServer.domain.health.service.HealthService;
 import com.dasom.dasomServer.infra.ai.LstmInferenceService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j

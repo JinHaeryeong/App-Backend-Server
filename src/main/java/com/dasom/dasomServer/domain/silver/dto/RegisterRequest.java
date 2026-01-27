@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.domain.silver.dto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -31,7 +31,7 @@ public class Silver {
     @Column(columnDefinition = "DECIMAL(4,1) DEFAULT 0.0")
     private Double rhr;
 
-    // 실시간 건강 데이터와의 관계 (1:N)
+    // 이미지와의 관계 (1:N)
     @OneToMany(mappedBy = "silver", cascade = CascadeType.ALL)
     @Builder.Default
     private List<SilverImage> images = new ArrayList<>();

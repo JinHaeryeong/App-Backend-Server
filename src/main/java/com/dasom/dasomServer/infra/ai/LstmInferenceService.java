@@ -12,7 +12,7 @@ import com.dasom.dasomServer.domain.health.repository.HealthResultLogRepository;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import com.dasom.dasomServer.domain.silver.repository.SilverRepository;
 import com.dasom.dasomServer.global.common.ApiResponse;
-import com.dasom.dasomServer.DTO.HealthRequest;
+import com.dasom.dasomServer.domain.health.dto.HealthRequest;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;

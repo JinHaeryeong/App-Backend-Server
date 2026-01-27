@@ -5,7 +5,7 @@
     <!--    별칭 등록-->
     <typeAliases>
         <typeAlias type="com.dasom.dasomServer.domain.silver.dto.User" alias="User"/>
-        <typeAlias type="com.dasom.dasomServer.DTO.HealthRequest" alias="HealthRequest"/>
+        <typeAlias type="com.dasom.dasomServer.domain.health.dto.HealthRequest" alias="HealthRequest"/>
     </typeAliases>
 
 </configuration>

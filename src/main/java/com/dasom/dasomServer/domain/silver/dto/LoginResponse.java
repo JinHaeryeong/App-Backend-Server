@@ -1,10 +1,10 @@
-package com.dasom.dasomServer.DTO;
+package com.dasom.dasomServer.domain.silver.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,7 +18,8 @@ public class LoginResponse {
     private String name;
     private char gender;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy", timezone = "Asia/Seoul")
-    private Date birthday;
+    // Date 대신 LocalDateTime으로 변경!
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+    private LocalDateTime birthday;
     private List<String> images;
 }

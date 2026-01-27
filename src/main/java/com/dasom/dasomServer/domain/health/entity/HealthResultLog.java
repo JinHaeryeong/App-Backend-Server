@@ -21,7 +21,7 @@ public class HealthResultLog {
     private String silverId;
 
     @Enumerated(EnumType.STRING) // Enum을 문자열로 저장
-    @Column(columnDefinition = "ENUM('정상', '주의', '위험')")
+    @Column(columnDefinition = "ENUM('위험', '정상', '주의')")
     private HealthStatus label;
 
     @Column(name = "log_date")

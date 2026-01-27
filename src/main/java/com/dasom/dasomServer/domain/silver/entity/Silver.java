@@ -1,5 +1,7 @@
 package com.dasom.dasomServer.domain.silver.entity;
 
+import com.dasom.dasomServer.domain.caregiver.entity.Caregiver;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +24,7 @@ public class Silver {
     @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
+    @JsonIgnore
     private String password;
     private String name;
     private char gender;
@@ -35,4 +38,8 @@ public class Silver {
     @OneToMany(mappedBy = "silver", cascade = CascadeType.ALL)
     @Builder.Default
     private List<SilverImage> images = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "caregiver_id") // DB 컬럼명에 맞춰주세요
+    private Caregiver caregiver;
 }

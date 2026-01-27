@@ -192,7 +192,7 @@ public class LstmInferenceService {
         Silver silver = silverRepository.findByLoginId(silverId)
                 .orElseThrow(() -> new RuntimeException("어르신을 찾을 수 없습니다: " + silverId));
 
-        int age = (int) ChronoUnit.YEARS.between(silver.getBirthday(), LocalDate.now());
+        int age = (int) ChronoUnit.YEARS.between(silver.getBirthday().toLocalDate(), LocalDate.now());
 
         // char 타입 비교
         float genderValue = (silver.getGender() == 'M' || silver.getGender() == 'm') ? 1.0f : 0.0f;

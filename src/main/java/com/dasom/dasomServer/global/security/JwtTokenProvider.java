@@ -1,8 +1,8 @@
 package com.dasom.dasomServer.global.security;
 
-import com.dasom.dasomServer.global.security.mapper.RefreshTokenMapper;
-import com.dasom.dasomServer.DTO.RefreshToken;
-import com.dasom.dasomServer.domain.user.service.UserDetailService;
+import com.dasom.dasomServer.domain.silver.entity.RefreshToken; // 엔티티 임포트
+import com.dasom.dasomServer.domain.silver.repository.RefreshTokenRepository; // 리포지토리 임포트
+import com.dasom.dasomServer.domain.silver.service.UserDetailService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional; // @Transactional 추가
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -26,12 +27,11 @@ public class JwtTokenProvider {
 
     @Lazy
     private final UserDetailService userDetailsService;
-    private final RefreshTokenMapper refreshTokenMapper;
+    private final RefreshTokenRepository refreshTokenRepository; // Mapper 대신 Repository 주입
 
     @Value("${jwt.secret}")
     private String secretKeyString;
 
-    // application.yml에서 설정한 만료 시간
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpirationMs;
     @Value("${jwt.refresh-token-expiration}")
@@ -42,8 +42,9 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Access Token과 Refresh Token을 생성하고 Refresh Token을 DB에 저장
+     * Access Token과 Refresh Token을 생성하고 Refresh Token을 DB에 저장/갱신
      */
+    @Transactional // DB 상태가 변하므로 트랜잭션 처리 필수!
     public LoginTokenDto createToken(String loginId) {
 
         String accessToken = Jwts.builder()
@@ -60,24 +61,29 @@ public class JwtTokenProvider {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
 
-        // DB에 Refresh Token 저장/갱신
-
-        log.info("loginId == {}", loginId);
-        log.info("refreshToken === {}", refreshTokenValue);
-        RefreshToken refreshToken = new RefreshToken(loginId, refreshTokenValue);
-        log.info("refreshToken 확인용 === {}", refreshToken);
-        refreshTokenMapper.save(refreshToken);
+        // [핵심] JPA를 이용한 UPSERT 로직 (MyBatis의 ON DUPLICATE KEY UPDATE 대체)
+        refreshTokenRepository.findBySilverId(loginId)
+                .ifPresentOrElse(
+                        existingToken -> {
+                            log.info("기존 리프레시 토큰 갱신: {}", loginId);
+                            existingToken.updateToken(refreshTokenValue); // Dirty Checking으로 자동 업데이트
+                        },
+                        () -> {
+                            log.info("새 리프레시 토큰 저장: {}", loginId);
+                            refreshTokenRepository.save(RefreshToken.builder()
+                                    .silverId(loginId)
+                                    .refreshToken(refreshTokenValue)
+                                    .build());
+                        }
+                );
 
         log.info("JWT Tokens created for {}. Access Exp: {} min", loginId, TimeUnit.MILLISECONDS.toMinutes(accessTokenExpirationMs));
 
         return new LoginTokenDto(accessToken, refreshTokenValue);
     }
 
-    /**
-     * 토큰에서 사용자 인증 정보를 추출
-     */
+    /** 토큰에서 사용자 인증 정보를 추출 */
     public Authentication getAuthentication(String token) {
-        // 토큰에서 loginId (Subject)를 추출
         String loginId = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -85,16 +91,11 @@ public class JwtTokenProvider {
                 .getPayload()
                 .getSubject();
 
-        // UserDetailsService를 통해 UserDetails를 로드
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
-
-        // 인증 객체 반환
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    /**
-     * 토큰의 유효성을 검사합니다.
-     */
+    /** 토큰의 유효성을 검사 */
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
@@ -111,7 +112,6 @@ public class JwtTokenProvider {
         return false;
     }
 
-    // 토큰 생성 시 사용되는 DTO (이너 클래스로 정의)
     public static class LoginTokenDto {
         public final String accessToken;
         public final String refreshToken;

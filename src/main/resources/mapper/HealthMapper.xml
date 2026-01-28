@@ -19,7 +19,7 @@
 
     <!-- 마지막 레코드 조회 -->
     <!-- DTO 필드명과 DB 칼럼명이 다른 경우 AS를 사용하여 매핑 -->
-    <select id="findLastHealthData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
+    <select id="findLastHealthData" resultType="com.dasom.dasomServer.domain.health.dto.HealthRequest">
         SELECT
             silver_id,
             heart_rate AS heartRateAvg,
@@ -39,7 +39,7 @@
     </select>
 
     <!-- 시퀀스 데이터 조회 -->
-    <select id="findSequenceData" resultType="com.dasom.dasomServer.DTO.HealthRequest">
+    <select id="findSequenceData" resultType="com.dasom.dasomServer.domain.health.dto.HealthRequest">
         SELECT
             silver_id,
             heart_rate AS heartRateAvg,
@@ -100,7 +100,7 @@
     </insert>
 
     <!-- 하루 한번 측정되는 데이터 관련 -->
-    <insert id="upsertDailyHealthLog" parameterType="com.dasom.dasomServer.DTO.DailyHealthLogRequest">
+    <insert id="upsertDailyHealthLog" parameterType="com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest">
         INSERT INTO daily_health_logs (
             silver_id,
             log_date,

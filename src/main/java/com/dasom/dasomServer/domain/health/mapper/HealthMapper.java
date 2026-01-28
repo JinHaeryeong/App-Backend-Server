@@ -1,8 +1,8 @@
 package com.dasom.dasomServer.domain.health.mapper;
 
 
-import com.dasom.dasomServer.DTO.DailyHealthLogRequest;
-import com.dasom.dasomServer.DTO.HealthRequest;
+import com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest;
+import com.dasom.dasomServer.domain.health.dto.HealthRequest;
 import lombok.Data;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

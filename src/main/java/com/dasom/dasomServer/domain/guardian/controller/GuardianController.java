@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.guardian.controller;
 
-import com.dasom.dasomServer.domain.guardian.dto.GuardianResponseDTO;
+import com.dasom.dasomServer.domain.guardian.dto.GuardianResponse;
 import com.dasom.dasomServer.domain.guardian.service.GuardianService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +23,9 @@ public class GuardianController {
     }
 
     @GetMapping("/{silverId}")
-    public ResponseEntity<List<GuardianResponseDTO>> getGuardiansBySilverId(@PathVariable String silverId) {
+    public ResponseEntity<List<GuardianResponse>> getGuardiansBySilverId(@PathVariable String silverId) {
 
-        List<GuardianResponseDTO> guardians = guardianService.getGuardiansForApp(silverId);
+        List<GuardianResponse> guardians = guardianService.getGuardiansForApp(silverId);
 
         return ResponseEntity.ok(guardians); // HTTP 200 OK와 함께 리스트 반환
     }

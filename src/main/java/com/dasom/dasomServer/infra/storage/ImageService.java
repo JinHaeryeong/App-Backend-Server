@@ -70,7 +70,7 @@ public class ImageService {
     }
 
     /**
-     * 💡 [추가됨] 2. UserServiceImpl(authenticateUser)에서 호출할 getFileUrl 추가
+     * 💡 [추가됨] 2. SilverServiceImpl(authenticateUser)에서 호출할 getFileUrl 추가
      * DB에 저장된 파일명을 실제 접근 URL로 변환
      */
     public String getFileUrl(String storedFilename) {

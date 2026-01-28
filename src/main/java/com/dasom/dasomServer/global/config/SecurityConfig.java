@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                         //테스트용
+                                .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
                                 .requestMatchers("/api/health/sequence-test").permitAll()
                                 .requestMatchers("/api/health/test/guardians").permitAll()
                                 .requestMatchers("/api/health/**").authenticated()

@@ -1,72 +1,67 @@
 package com.dasom.dasomServer.domain.guardian.service;
 
-import com.dasom.dasomServer.domain.guardian.mapper.GuardianMapper;
-import com.dasom.dasomServer.domain.user.mapper.UserMapper;
-import com.dasom.dasomServer.domain.guardian.dto.Guardian;
-import com.dasom.dasomServer.domain.guardian.dto.GuardianResponseDTO;
+import com.dasom.dasomServer.domain.guardian.dto.GuardianResponse;
+import com.dasom.dasomServer.domain.guardian.entity.Guardian;
+import com.dasom.dasomServer.domain.guardian.repository.GuardianImageRepository;
+import com.dasom.dasomServer.domain.guardian.repository.GuardianRepository;
 import com.dasom.dasomServer.infra.storage.ImageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true) // 읽기 전용 성능 최적화
 public class GuardianService {
 
-    private final GuardianMapper guardianMapper;
+    private final GuardianRepository guardianRepository;
+    private final GuardianImageRepository guardianImageRepository; // 새로 만든 리포지토리
     private final ImageService imageService;
 
     @Value("${file.access_url}")
     private String serverBaseUrl;
 
-
-    public List<GuardianResponseDTO> getGuardiansForApp(String silverId) {
-
-        List<Guardian> guardians = guardianMapper.findGuardiansBySilverId(silverId);
+    public List<GuardianResponse> getGuardiansForApp(String silverId) {
+        // MyBatis 매퍼 대신 JPA 리포지토리 사용
+        List<Guardian> guardians = guardianRepository.findBySilverLoginId(silverId);
 
         return guardians.stream()
-                .map(guardian -> {
-
-                    Long guardianId = guardian.getId();
-                    String storedFilename = guardianMapper.findGuardianStoredFilenameByGuardianId(guardianId);
-
-                    String profileImageUrl = null;
-                    if (storedFilename != null && !storedFilename.isEmpty()) {
-
-                        // c) ImageService에서 깨끗한 상대 경로를 얻습니다. (예: /uploads/uuid.jpg)
-                        String relativePath = imageService.getFileUrl(storedFilename);
-
-                        // d) [!! URL 구성 로직 수정: 중복 슬래시 및 경로 방지 !!]
-
-                        // 1. serverBaseUrl의 끝 슬래시 제거 (예: http://ip:port)
-                        String cleanBaseUrl = serverBaseUrl.endsWith("/")
-                                ? serverBaseUrl.substring(0, serverBaseUrl.length() - 1)
-                                : serverBaseUrl;
-
-                        // 2. relativePath의 시작 슬래시가 두 개 이상일 경우 하나만 남깁니다.
-                        //    (예: //uploads/ -> /uploads/)
-                        String cleanRelativePath = relativePath.replaceAll("/+", "/");
-
-                        // 3. 최종 절대 URL 구성: http://ip:port + /uploads/uuid.jpg
-                        //    만약 ImageService가 'uploads/uuid.jpg'를 반환하도록 수정되었다면 이 로직이 맞습니다.
-                        profileImageUrl = cleanBaseUrl + cleanRelativePath;
-
-                        // 🚨 디버깅을 위해 최종 URL 로그 출력
-                        System.out.println("FINAL Guardian Image URL: " + profileImageUrl);
-                    }
-
-                    return new GuardianResponseDTO(
-                            guardian.getName(),
-                            guardian.getTel(),
-                            guardian.getRelationship(),
-                            guardian.getAddress(),
-                            profileImageUrl
-                    );
-                })
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    private GuardianResponse convertToDTO(Guardian guardian) {
+        // 이미지를 찾아서 => 있으면 URL로 변환하고 => 없으면 null 반환
+        String profileImageUrl = guardianImageRepository.findFirstByGuardianIdOrderByIdAsc(guardian.getId())
+                .map(image -> buildFullUrl(image.getStoredFileName()))
+                .orElse(null); // 이미지가 없으면 null
+
+        return new GuardianResponse(
+                guardian.getName(),
+                guardian.getTel(),
+                guardian.getRelationship(),
+                guardian.getAddress(),
+                profileImageUrl
+        );
+    }
+
+    private String buildFullUrl(String storedFilename) {
+        String relativePath = imageService.getFileUrl(storedFilename);
+
+        // URL 정리 로직 (기존 로직 유지하되 가독성 조아짐)
+        String cleanBaseUrl = serverBaseUrl.endsWith("/")
+                ? serverBaseUrl.substring(0, serverBaseUrl.length() - 1)
+                : serverBaseUrl;
+
+        String cleanRelativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        cleanRelativePath = cleanRelativePath.replaceAll("/+", "/");
+
+        return cleanBaseUrl + cleanRelativePath;
     }
 }

@@ -1,127 +1,91 @@
 package com.dasom.dasomServer.domain.caregiver.service;
 
-import com.dasom.dasomServer.domain.caregiver.dto.Caregiver; // 요양보호사 엔티티/DTO
-import com.dasom.dasomServer.domain.caregiver.dto.CaregiverlResponseDTO; // 최종 응답 DTO
-import com.dasom.dasomServer.domain.caregiver.mapper.CaregiverMapper;
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverResponse;
+import com.dasom.dasomServer.domain.caregiver.entity.Caregiver; // 1. 엔티티 패키지로 변경 확인!
+import com.dasom.dasomServer.domain.caregiver.repository.CaregiverImageRepository;
+import com.dasom.dasomServer.domain.caregiver.repository.CaregiverRepository;
 import com.dasom.dasomServer.infra.storage.ImageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CaregiverService {
 
-    private final CaregiverMapper caregiverMapper;
+    private final CaregiverRepository caregiverRepository;
+    private final CaregiverImageRepository caregiverImageRepository;
     private final ImageService imageService;
 
-    // 서버 기본 URL (예: http://ip:port)을 application.properties에서 주입받음
     @Value("${file.access_url}")
     private String serverBaseUrl;
 
-    @Autowired // 의존성 주입 (Dependency Injection)
-    public CaregiverService(CaregiverMapper caregiverMapper, ImageService imageService) {
-        this.caregiverMapper = caregiverMapper;
-        this.imageService = imageService;
+    /**
+     * ID 기반 조회
+     */
+    public CaregiverResponse getCaregiverDetails(Long caregiverId) {
+        // caregiverMapper.findCaregiverById 대신 findById(JPA 기본 메서드) 사용
+        return caregiverRepository.findById(caregiverId)
+                .map(this::mapToCaregiverResponseDTO)
+                .orElse(null);
     }
 
-    // ------------------------- ID 기반 조회 (Controller 오류 해결용) -------------------------
-
     /**
-     * Primary Key ID를 기반으로 요양보호사 정보를 조회하고 DTO를 반환합니다.
+     * Login ID 기반 조회
      */
-    public CaregiverlResponseDTO getCaregiverDetails(Long caregiverId) {
-
-        // 1. DB에서 요양보호사 정보를 ID로 조회 (UserMapper.findCaregiverById 호출)
-        Caregiver caregiver = caregiverMapper.findCaregiverById(caregiverId);
-
-        if (caregiver == null) {
-            return null; // 데이터가 없으면 null 반환 (Controller에서 404 처리 유도)
-        }
-
-        // 2. DTO 변환 및 URL 구성 로직을 내부 메서드에 위임
-        return mapToCaregiverResponseDTO(caregiver);
+    public CaregiverResponse getCaregiverDetailsForApp(String loginId) {
+        // caregiverMapper.findCaregiverByLoginId 대신 리포지토리 메서드 사용
+        return caregiverRepository.findByLoginId(loginId)
+                .map(this::mapToCaregiverResponseDTO)
+                .orElse(null);
     }
 
-    // ------------------------- Login ID 기반 조회 -------------------------
-
     /**
-     * 특정 로그인 ID를 가진 요양보호사(Caregiver)의 상세 정보를 조회하고 이미지 URL을 구성합니다.
+     * 어르신(Silver) 로그인 ID 기반 담당 지원사 조회
      */
-    public CaregiverlResponseDTO getCaregiverDetailsForApp(String loginId) {
-
-        // 1. DB에서 요양보호사 정보를 로그인 ID로 조회 (UserMapper.findCaregiverByLoginId 호출)
-        Caregiver caregiver = caregiverMapper.findCaregiverByLoginId(loginId);
-
-        if (caregiver == null) {
-            return null;
-        }
-
-        // 2. DTO 변환 및 URL 구성 로직을 내부 메서드에 위임
-        return mapToCaregiverResponseDTO(caregiver);
+    public CaregiverResponse getCaregiverBySilverLoginId(String silverLoginId) {
+        // caregiverMapper.findCaregiverBySilverLoginId 대신 리포지토리의 @Query 메서드 사용
+        return caregiverRepository.findBySilverLoginId(silverLoginId)
+                .map(this::mapToCaregiverResponseDTO)
+                .orElse(null);
     }
 
-    // ------------------- [새로 추가된 메서드] -------------------
-
     /**
-     * 보호대상자(Silver)의 로그인 ID를 기반으로
-     * 담당 요양보호사(Caregiver)의 상세 정보를 조회합니다.
-     * (안드로이드 YoyangsaActivity에서 호출)
+     * DTO 매핑 및 URL 구성
      */
-    public CaregiverlResponseDTO getCaregiverBySilverLoginId(String silverLoginId) {
+    private CaregiverResponse mapToCaregiverResponseDTO(Caregiver caregiver) {
 
-        // 1. DB에서 보호대상자 ID를 이용해 요양보호사 정보를 조회
-        //    (UserMapper.findCaregiverBySilverLoginId 호출)
-        Caregiver caregiver = caregiverMapper.findCaregiverBySilverLoginId(silverLoginId);
-
-        if (caregiver == null) {
-            return null; // 배정된 요양사가 없거나, silverLoginId가 잘못된 경우
-        }
-
-        // 2. DTO 변환 및 URL 구성 로직 재사용
-        return mapToCaregiverResponseDTO(caregiver);
-    }
-
-    // ------------------------- 내부 DTO 매핑 및 URL 구성 로직 -------------------------
-
-    /**
-     * Caregiver 엔티티를 받아 이미지 URL을 구성하고 최종 응답 DTO로 매핑합니다.
-     */
-    private CaregiverlResponseDTO mapToCaregiverResponseDTO(Caregiver caregiver) {
-
-        // 1. 이미지 리스트에서 첫 번째 이미지의 저장된 파일 이름을 안전하게 추출
-        String storedFilename = Optional.ofNullable(caregiver.getImages())
-                .filter(list -> !list.isEmpty())
-                .map(list -> list.get(0).getStoredFilename())
+        // 이미지 리포지토리에서 첫 번째 이미지를 가져와 URL 빌드
+        String profileImageUrl = caregiverImageRepository.findFirstByCaregiverIdOrderByIdAsc(caregiver.getId())
+                .map(image -> buildFullUrl(image.getStoredFileName())) // storedFileName 철자 주의!
                 .orElse(null);
 
-        String profileImageUrl = null;
-
-        if (storedFilename != null && !storedFilename.isEmpty()) {
-
-            // ImageService를 통해 이미지 파일의 상대 경로 획득
-            String relativePath = imageService.getFileUrl(storedFilename);
-
-            // 서버 기본 URL과 상대 경로를 안전하게 결합하여 최종 접근 URL 생성
-            String cleanBaseUrl = Optional.ofNullable(serverBaseUrl)
-                    .map(url -> url.replaceAll("/+$", "")) // 기본 URL의 끝 슬래시 제거
-                    .orElse("");
-
-            String cleanRelativePath = Optional.ofNullable(relativePath)
-                    .map(path -> path.startsWith("/") ? path : "/" + path) // 상대 경로 시작 슬래시 확인
-                    .orElse("");
-
-            profileImageUrl = cleanBaseUrl + cleanRelativePath;
-        }
-
-        // 2. DTO 생성 및 반환 (Controller로 전달)
-        return new CaregiverlResponseDTO(
+        return new CaregiverResponse(
                 caregiver.getName(),
                 caregiver.getTel(),
                 caregiver.getGender(),
                 caregiver.getAffiliation(),
-                profileImageUrl // 이 값이 최종 응답 DTO의 storedFilename 필드에 들어감
+                profileImageUrl
         );
+    }
+
+    /**
+     * URL 결합 헬퍼 메서드 (중복 제거용)
+     */
+    private String buildFullUrl(String storedFilename) {
+        if (storedFilename == null || storedFilename.isEmpty()) return null;
+
+        String relativePath = imageService.getFileUrl(storedFilename);
+
+        String cleanBaseUrl = serverBaseUrl.replaceAll("/+$", "");
+        String cleanRelativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        cleanRelativePath = cleanRelativePath.replaceAll("/+", "/");
+
+        return cleanBaseUrl + cleanRelativePath;
     }
 }

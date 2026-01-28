@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data // Getter, Setter, toString 등을 자동 생성
 @NoArgsConstructor // 기본 생성자
 @AllArgsConstructor // 모든 필드를 받는 생성자
-public class GuardianResponseDTO {
+public class GuardianResponse {
     private String name;
     private String tel;
     private String relationship;

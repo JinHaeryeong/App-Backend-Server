@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.caregiver.service;
 
-import com.dasom.dasomServer.domain.caregiver.dto.CaregiverResponseDTO;
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverResponse;
 import com.dasom.dasomServer.domain.caregiver.entity.Caregiver; // 1. 엔티티 패키지로 변경 확인!
 import com.dasom.dasomServer.domain.caregiver.repository.CaregiverImageRepository;
 import com.dasom.dasomServer.domain.caregiver.repository.CaregiverRepository;
@@ -28,7 +28,7 @@ public class CaregiverService {
     /**
      * ID 기반 조회
      */
-    public CaregiverResponseDTO getCaregiverDetails(Long caregiverId) {
+    public CaregiverResponse getCaregiverDetails(Long caregiverId) {
         // caregiverMapper.findCaregiverById 대신 findById(JPA 기본 메서드) 사용
         return caregiverRepository.findById(caregiverId)
                 .map(this::mapToCaregiverResponseDTO)
@@ -38,7 +38,7 @@ public class CaregiverService {
     /**
      * Login ID 기반 조회
      */
-    public CaregiverResponseDTO getCaregiverDetailsForApp(String loginId) {
+    public CaregiverResponse getCaregiverDetailsForApp(String loginId) {
         // caregiverMapper.findCaregiverByLoginId 대신 리포지토리 메서드 사용
         return caregiverRepository.findByLoginId(loginId)
                 .map(this::mapToCaregiverResponseDTO)
@@ -48,7 +48,7 @@ public class CaregiverService {
     /**
      * 어르신(Silver) 로그인 ID 기반 담당 지원사 조회
      */
-    public CaregiverResponseDTO getCaregiverBySilverLoginId(String silverLoginId) {
+    public CaregiverResponse getCaregiverBySilverLoginId(String silverLoginId) {
         // caregiverMapper.findCaregiverBySilverLoginId 대신 리포지토리의 @Query 메서드 사용
         return caregiverRepository.findBySilverLoginId(silverLoginId)
                 .map(this::mapToCaregiverResponseDTO)
@@ -58,14 +58,14 @@ public class CaregiverService {
     /**
      * DTO 매핑 및 URL 구성
      */
-    private CaregiverResponseDTO mapToCaregiverResponseDTO(Caregiver caregiver) {
+    private CaregiverResponse mapToCaregiverResponseDTO(Caregiver caregiver) {
 
         // 이미지 리포지토리에서 첫 번째 이미지를 가져와 URL 빌드
         String profileImageUrl = caregiverImageRepository.findFirstByCaregiverIdOrderByIdAsc(caregiver.getId())
                 .map(image -> buildFullUrl(image.getStoredFileName())) // storedFileName 철자 주의!
                 .orElse(null);
 
-        return new CaregiverResponseDTO(
+        return new CaregiverResponse(
                 caregiver.getName(),
                 caregiver.getTel(),
                 caregiver.getGender(),

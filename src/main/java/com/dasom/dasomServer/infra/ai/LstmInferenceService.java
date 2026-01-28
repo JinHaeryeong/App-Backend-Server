@@ -225,13 +225,14 @@ public class LstmInferenceService {
                     }
                 }
 
-                String label = classLabels[predictedClass];
+                HealthStatus status = HealthStatus.values()[predictedClass];
+                String label = status.name();
                 log.info("추론 결과 저장: SilverId={}, Label={}", silverId, label);
 
                 // JPA로 분석 결과 저장
                 resultRepository.save(HealthResultLog.builder()
                         .silverId(silverId)
-                        .label(HealthStatus.valueOf(label))
+                        .label(status)
                         .logDate(LocalDateTime.now())
                         .build());
 

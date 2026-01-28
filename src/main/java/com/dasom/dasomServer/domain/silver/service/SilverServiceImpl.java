@@ -2,6 +2,7 @@ package com.dasom.dasomServer.domain.silver.service;
 
 import com.dasom.dasomServer.domain.silver.dto.LoginResponse;
 import com.dasom.dasomServer.domain.silver.dto.RegisterRequest;
+import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import com.dasom.dasomServer.domain.silver.entity.SilverImage;
 import com.dasom.dasomServer.domain.silver.repository.SilverImageRepository;
@@ -10,13 +11,16 @@ import com.dasom.dasomServer.global.security.JwtTokenProvider;
 import com.dasom.dasomServer.infra.storage.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +35,8 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
     private final JwtTokenProvider jwtTokenProvider;
+
+
 
     @Transactional
     @Override
@@ -133,19 +139,44 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Silver> getUserByLoginId(String loginId) {
-        return silverRepository.findByLoginId(loginId);
+    public Optional<SilverResponse> getUserByLoginId(String loginId) {
+        // 엔티티를 찾아서 DTO로 변환하여 반환
+        return silverRepository.findByLoginId(loginId)
+                .map(this::convertToResponse);
+    }
+
+
+    // 공통 변환 메서드
+    private SilverResponse convertToResponse(Silver silver) {
+        return SilverResponse.builder()
+                .id(silver.getId())
+                .loginId(silver.getLoginId())
+                .name(silver.getName())
+                .gender(silver.getGender())
+                .birthday(silver.getBirthday())
+                // 지원사 객체에서 ID만 추출
+                .caregiverId(silver.getCaregiver() != null ? silver.getCaregiver().getId() : null)
+                // 이미지 엔티티 리스트를 URL 리스트로 변환
+                .imageUrls(silver.getImages().stream()
+                        .map(image -> imageService.getFileUrl(image.getStoredFileName()))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SilverResponse> getUserById(Long id) {
+        return silverRepository.findById(id)
+                .map(this::convertToResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Silver> getUserById(Long id) {
-        return silverRepository.findById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Silver> getAllUsers() {
-        return silverRepository.findAll();
+    public List<SilverResponse> getAllUsers() {
+        List<Silver> silvers = silverRepository.findAll();
+        // 중복 코드를 지우고 convertToResponse를 호출하도록 변경
+        return silvers.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 }
+

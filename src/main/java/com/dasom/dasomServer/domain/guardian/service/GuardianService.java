@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.guardian.service;
 
-import com.dasom.dasomServer.domain.guardian.dto.GuardianResponseDTO;
+import com.dasom.dasomServer.domain.guardian.dto.GuardianResponse;
 import com.dasom.dasomServer.domain.guardian.entity.Guardian;
 import com.dasom.dasomServer.domain.guardian.repository.GuardianImageRepository;
 import com.dasom.dasomServer.domain.guardian.repository.GuardianRepository;
@@ -27,7 +27,7 @@ public class GuardianService {
     @Value("${file.access_url}")
     private String serverBaseUrl;
 
-    public List<GuardianResponseDTO> getGuardiansForApp(String silverId) {
+    public List<GuardianResponse> getGuardiansForApp(String silverId) {
         // MyBatis 매퍼 대신 JPA 리포지토리 사용
         List<Guardian> guardians = guardianRepository.findBySilverLoginId(silverId);
 
@@ -36,13 +36,13 @@ public class GuardianService {
                 .collect(Collectors.toList());
     }
 
-    private GuardianResponseDTO convertToDTO(Guardian guardian) {
+    private GuardianResponse convertToDTO(Guardian guardian) {
         // 이미지를 찾아서 => 있으면 URL로 변환하고 => 없으면 null 반환
         String profileImageUrl = guardianImageRepository.findFirstByGuardianIdOrderByIdAsc(guardian.getId())
                 .map(image -> buildFullUrl(image.getStoredFileName()))
                 .orElse(null); // 이미지가 없으면 null
 
-        return new GuardianResponseDTO(
+        return new GuardianResponse(
                 guardian.getName(),
                 guardian.getTel(),
                 guardian.getRelationship(),

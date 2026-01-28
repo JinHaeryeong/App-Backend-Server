@@ -8,6 +8,6 @@ import java.util.Optional;
 public interface GuardianImageRepository extends JpaRepository<GuardianImage, Long> {
 
     // 쿼리문 없이 이름
-    // "보호자 ID로 검색해서 storedFileName 목록만 가져와라"는 뜻~
+    // "보호자 ID로 검색해서 storedFileName 목록만 가져와라"는 뜻
     Optional<GuardianImage> findFirstByGuardianIdOrderByIdAsc(Long guardianId);
 }

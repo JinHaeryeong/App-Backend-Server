@@ -1,7 +1,9 @@
 package com.dasom.dasomServer.domain.silver.controller;
 
+import com.dasom.dasomServer.domain.silver.dto.LoginRequest;
 import com.dasom.dasomServer.domain.silver.dto.LoginResponse;
 import com.dasom.dasomServer.domain.silver.dto.RegisterRequest;
+import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver; // 1. 엔티티 임포트
 import com.dasom.dasomServer.domain.silver.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +53,7 @@ public class SilverController {
 
     @GetMapping("/users/{id}")
     // ResponseEntity<User> -> ResponseEntity<Silver>로 타입 변경!
-    public ResponseEntity<Silver> getUser(@PathVariable Long id) {
+    public ResponseEntity<SilverResponse> getUser(@PathVariable Long id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -59,14 +61,14 @@ public class SilverController {
 
     @GetMapping("/users")
     // List<User> -> List<Silver>로 타입 변경!
-    public ResponseEntity<List<Silver>> getAllUsers() {
-        List<Silver> users = userService.getAllUsers();
+    public ResponseEntity<List<SilverResponse>> getAllUsers() {
+        List<SilverResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @PostMapping("/login")
     // @RequestBody 타입을 User DTO 대신 RegisterRequest
-    public ResponseEntity<LoginResponse> loginUser(@RequestBody RegisterRequest loginInfo) {
+    public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginRequest loginInfo) {
         log.info("Login attempt for ID: {} ", loginInfo.getLoginId());
 
         try {

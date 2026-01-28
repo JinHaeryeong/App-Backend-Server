@@ -40,6 +40,6 @@ public class Silver {
     private List<SilverImage> images = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "caregiver_id") // DB 컬럼명에 맞춰주세요
+    @JoinColumn(name = "caregiver_id") // DB 컬럼명에 맞추기
     private Caregiver caregiver;
 }

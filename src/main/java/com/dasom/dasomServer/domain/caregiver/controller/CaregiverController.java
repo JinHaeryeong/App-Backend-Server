@@ -1,7 +1,7 @@
 package com.dasom.dasomServer.domain.caregiver.controller;
 
 import com.dasom.dasomServer.domain.caregiver.service.CaregiverService;
-import com.dasom.dasomServer.domain.caregiver.dto.CaregiverResponseDTO;
+import com.dasom.dasomServer.domain.caregiver.dto.CaregiverResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +20,8 @@ public class CaregiverController {
     // ------------------------- ID 기반 조회 엔드포인트 -------------------------
     // 요청 예시: GET /api/caregivers/details/id/1
     @GetMapping("/details/id/{id}")
-    public ResponseEntity<CaregiverResponseDTO> getCaregiverDetailsById(@PathVariable Long id) {
-        CaregiverResponseDTO response = caregiverService.getCaregiverDetails(id);
+    public ResponseEntity<CaregiverResponse> getCaregiverDetailsById(@PathVariable Long id) {
+        CaregiverResponse response = caregiverService.getCaregiverDetails(id);
 
         if (response == null) {
             return ResponseEntity.notFound().build();
@@ -32,9 +32,9 @@ public class CaregiverController {
     // ------------------------- Login ID 기반 조회 엔드포인트 -------------------------
     // 요청 예시: GET /api/caregivers/details/login/yys1234
     @GetMapping("/details/login/{loginId}")
-    public ResponseEntity<CaregiverResponseDTO> getCaregiverDetailsByLoginId(@PathVariable String loginId) {
+    public ResponseEntity<CaregiverResponse> getCaregiverDetailsByLoginId(@PathVariable String loginId) {
 
-        CaregiverResponseDTO response = caregiverService.getCaregiverDetailsForApp(loginId);
+        CaregiverResponse response = caregiverService.getCaregiverDetailsForApp(loginId);
 
         if (response == null) {
             return ResponseEntity.notFound().build();
@@ -45,9 +45,9 @@ public class CaregiverController {
     // ------------------- 보호대상자(Silver)의 로그인 ID를 기반으로 담당 요양보호사(Caregiver) 정보를 조회 -------------------
     //(예: /api/caregivers/by-silver/ppp1234)
     @GetMapping("/by-silver/{silverLoginId}")
-    public ResponseEntity<CaregiverResponseDTO> getCaregiverBySilverId(@PathVariable String silverLoginId) {
+    public ResponseEntity<CaregiverResponse> getCaregiverBySilverId(@PathVariable String silverLoginId) {
 
-        CaregiverResponseDTO caregiverDTO = caregiverService.getCaregiverBySilverLoginId(silverLoginId);
+        CaregiverResponse caregiverDTO = caregiverService.getCaregiverBySilverLoginId(silverLoginId);
 
         if (caregiverDTO != null) {
             return ResponseEntity.ok(caregiverDTO);

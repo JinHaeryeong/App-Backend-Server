@@ -2,6 +2,7 @@ package com.dasom.dasomServer.domain.silver.service;
 
 import com.dasom.dasomServer.domain.silver.dto.LoginResponse;
 import com.dasom.dasomServer.domain.silver.dto.RegisterRequest;
+import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -13,11 +14,11 @@ public interface UserService {
     LoginResponse createUser(RegisterRequest request, List<MultipartFile> imageFiles);
 
     // 로그인 ID로 사용자 조회 (인증 / ID 중복 검사)
-    Optional<Silver> getUserByLoginId(String loginId);
+    Optional<SilverResponse> getUserByLoginId(String loginId);
 
-    Optional<Silver> getUserById(Long id);
+    Optional<SilverResponse> getUserById(Long id);
 
-    List<Silver> getAllUsers();
+    List<SilverResponse> getAllUsers();
 
     // 로그인 인증
     LoginResponse authenticateUser(String loginId, String password);

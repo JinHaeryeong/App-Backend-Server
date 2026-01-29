@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.domain.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +38,7 @@ public class HealthLog {
     private Double oxygen;
 
     @Column(name = "log_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime logDate;
 
     // 수면 관련 필드들

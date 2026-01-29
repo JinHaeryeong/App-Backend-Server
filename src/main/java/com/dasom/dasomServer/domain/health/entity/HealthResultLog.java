@@ -20,8 +20,8 @@ public class HealthResultLog {
     @Column(name = "silver_id", length = 50, nullable = false)
     private String silverId;
 
-    @Enumerated(EnumType.STRING) // Enum을 문자열로 저장
-    @Column(columnDefinition = "ENUM('위험', '정상', '주의')")
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('DANGER', 'NORMAL', 'WARNING')")
     private HealthStatus label;
 
     @Column(name = "log_date")

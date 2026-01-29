@@ -5,15 +5,14 @@ import com.dasom.dasomServer.domain.silver.dto.RegisterRequest;
 import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import com.dasom.dasomServer.domain.silver.entity.SilverImage;
+import com.dasom.dasomServer.domain.silver.repository.RefreshTokenRepository;
 import com.dasom.dasomServer.domain.silver.repository.SilverImageRepository;
 import com.dasom.dasomServer.domain.silver.repository.SilverRepository;
 import com.dasom.dasomServer.global.security.JwtTokenProvider;
 import com.dasom.dasomServer.infra.storage.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 public class SilverServiceImpl implements UserService { // 인터페이스 명칭은 그대로 유지
 
     private final SilverRepository silverRepository;
-    private final SilverImageRepository silverImageRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -102,23 +101,23 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse authenticateUser(String loginId, String rawPassword) {
-        // 1. 사용자 및 이미지 한방에 조회 (@EntityGraph 적용된 메서드)
+        // 사용자 및 이미지 한방에 조회 (@EntityGraph 적용된 메서드)
         Silver silver = silverRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
 
-        // 2. 비밀번호 검증
+        // 비밀번호 검증
         if (!passwordEncoder.matches(rawPassword, silver.getPassword())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
         log.info("LOGIN SUCCESS: LoginId={}", silver.getLoginId());
 
-        // 3. JWT 토큰 생성
+        // JWT 토큰 생성
         String jwtAccessToken = jwtTokenProvider.createToken(silver.getLoginId()).accessToken;
 
-        // 4. 이미지 URL 리스트 생성 (엔티티의 images 리스트 활용)
+        // 이미지 URL 리스트 생성 (엔티티의 images 리스트 활용)
         List<String> imageUrls = silver.getImages().stream()
                 .map(image -> imageService.getFileUrl(image.getStoredFileName()))
                 .collect(Collectors.toList());
@@ -135,15 +134,13 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
                 .build();
     }
 
-    // --- 기존 조회 메서드들의 JPA화 ---
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<SilverResponse> getUserByLoginId(String loginId) {
-        // 엔티티를 찾아서 DTO로 변환하여 반환
-        return silverRepository.findByLoginId(loginId)
-                .map(this::convertToResponse);
+    @Transactional
+    public void logout(String loginId) {
+        // DB에서 리프레시 토큰을 찾아 삭제 (없으면 그냥 넘어감)
+        refreshTokenRepository.deleteBySilverId(loginId);
+        log.info("리프레시 토큰 삭제 완료 - SilverId: {}", loginId);
     }
+
 
 
     // 공통 변환 메서드

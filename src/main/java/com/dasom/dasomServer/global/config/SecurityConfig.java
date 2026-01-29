@@ -48,13 +48,14 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 1. 회원가입/로그인 허용 (토큰 불필요)
+                        // 회원가입/로그인 허용 (토큰 불필요)
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                         //테스트용
-                                .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
-                                .requestMatchers("/api/health/sequence-test").permitAll()
-                                .requestMatchers("/api/health/test/guardians").permitAll()
+//                                .requestMatchers("/api/health/**").permitAll()
+//                                .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
+//                                .requestMatchers("/api/health/sequence-test").permitAll()
+//                                .requestMatchers("/api/health/test/guardians").permitAll()
                                 .requestMatchers("/api/health/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")

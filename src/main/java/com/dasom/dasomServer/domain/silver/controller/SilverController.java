@@ -4,7 +4,6 @@ import com.dasom.dasomServer.domain.silver.dto.LoginRequest;
 import com.dasom.dasomServer.domain.silver.dto.LoginResponse;
 import com.dasom.dasomServer.domain.silver.dto.RegisterRequest;
 import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
-import com.dasom.dasomServer.domain.silver.entity.Silver; // 1. 엔티티 임포트
 import com.dasom.dasomServer.domain.silver.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +51,7 @@ public class SilverController {
     }
 
     @GetMapping("/users/{id}")
-    // ResponseEntity<User> -> ResponseEntity<Silver>로 타입 변경!
+    // ResponseEntity<User> -> ResponseEntity<SilverResponse>로 타입 변경!
     public ResponseEntity<SilverResponse> getUser(@PathVariable Long id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
@@ -60,7 +59,7 @@ public class SilverController {
     }
 
     @GetMapping("/users")
-    // List<User> -> List<Silver>로 타입 변경!
+    // List<User> -> List<SilverResponse>로 타입 변경!
     public ResponseEntity<List<SilverResponse>> getAllUsers() {
         List<SilverResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
@@ -82,5 +81,12 @@ public class SilverController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(LoginResponse.builder()
                     .success(false).message(e.getMessage()).build());
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody String loginId) { // 실제로는 SecurityContext에서 가져오는 게 정석!
+        log.info("Logout request for ID: {}", loginId);
+        userService.logout(loginId);
+        return ResponseEntity.ok().body("로그아웃 성공");
     }
 }

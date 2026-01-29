@@ -1,5 +1,6 @@
 package com.dasom.dasomServer.domain.silver.repository;
 
+import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +24,7 @@ public interface SilverRepository extends JpaRepository<Silver, Long> { // PK �
     @EntityGraph(attributePaths = {"images"})
     Optional<Silver> findByLoginId(String loginId);
 
+    
     // 전체 조회 시에도 N+1 문제를 방지하기 위해 findAll 재정의
     @Override
     @NonNull

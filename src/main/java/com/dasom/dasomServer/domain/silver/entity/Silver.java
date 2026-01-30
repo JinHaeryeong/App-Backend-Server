@@ -42,4 +42,8 @@ public class Silver {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "caregiver_id") // DB 컬럼명에 맞추기
     private Caregiver caregiver;
+
+    public void updateRhr(Double rhr) {
+        this.rhr = rhr;
+    }
 }

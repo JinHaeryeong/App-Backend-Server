@@ -13,14 +13,18 @@ import com.dasom.dasomServer.domain.silver.entity.Silver;
 import com.dasom.dasomServer.domain.silver.repository.SilverRepository;
 import com.dasom.dasomServer.global.common.ApiResponse;
 import com.dasom.dasomServer.domain.health.dto.HealthRequest;
+import com.dasom.dasomServer.global.config.RabbitMqConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.File;
 import java.io.InputStream;
@@ -44,6 +48,7 @@ public class LstmInferenceService {
     private final SilverRepository silverRepository;
     private final HealthResultLogRepository resultRepository;
     private final LstmInputScaler scaler;
+    private final RabbitTemplate rabbitTemplate;
 
     private OrtEnvironment environment;
     private OrtSession session;
@@ -55,7 +60,6 @@ public class LstmInferenceService {
     private static final int N_SEQ_FEATURES = 8;
     private static final int N_STATIC_FEATURES = 3;
     private final double DEFAULT_RHR = 70.0;
-    private final String[] classLabels = {"위험", "정상", "주의"};
 
     @PostConstruct
     public void init() {
@@ -85,20 +89,31 @@ public class LstmInferenceService {
         }
     }
 
-    // save도 하고 count도 하니까
+    // 생체 신호 수집 및 비동기 분석 파이프라인 트리거
     @Transactional
     public ApiResponse<?> processAndAnalyze(HealthRequest dto) {
         String silverId = dto.getSilverId();
         try {
             LocalDateTime now = LocalDateTime.now();
 
+            Integer heartRate = (dto.getHeartRateAvg() != null)
+                    ? dto.getHeartRateAvg().intValue()
+                    : null;
+
+            if (heartRate == null) {
+                // 이미 선언된 DEFAULT_RHR을 (int)로 캐스팅해서 사용
+                heartRate = (int) DEFAULT_RHR;
+                log.warn("SilverId: {} - 심박수 데이터 누락으로 기본값({}) 적용", silverId, heartRate);
+            }
+
+
             // 코파일럿이 지적한 부분 값이 null인지 체크 해줘야 nullPointerException 안터짐
             HealthLog newLog = HealthLog.builder()
                     .silverId(silverId)
-                    .heartRate(dto.getHeartRateAvg() != null ? dto.getHeartRateAvg().intValue() : 0)
+                    .heartRate(heartRate)
                     .stepCount(dto.getWalkingSteps())
                     .caloriesBurned(dto.getTotalCaloriesBurned())
-                    .oxygen(dto.getSpo2() > 0 ? (double) dto.getSpo2() : null)
+                    .oxygen(dto.getSpo2() > 0 ? (double) dto.getSpo2() : 98.0)
                     .logDate(dto.getLogDate() != null ? dto.getLogDate() : now)
                     .totalSleepMin(dto.getSleepDurationMin() != null ? dto.getSleepDurationMin().intValue() : 0)
                     .deepMin(dto.getSleepStageDeepMin() != null ? dto.getSleepStageDeepMin().intValue() : 0)
@@ -118,22 +133,34 @@ public class LstmInferenceService {
             수정함: count 값 변수에 담아서 쿼리 횟수 줄이기 (성능 최적화용) 
             기존 코드는 DB 서버 갔다가 결과 가져오는 과정이 두번임 
             고친 코드는 long count = healthLogRepository.countBySilverId(silverId);
-            에서 한번만 물어봄
             */
             long count = healthLogRepository.countBySilverId(silverId);
             if (count < N_STEPS) {
                 return ApiResponse.success(String.format("데이터 축적 중 (%d/%d)", count, N_STEPS));
             }
+            
+            // 트랜잭션 커밋 완료 시점에 분석 메시지 발행 (이벤트 기반 비동기 처리)
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        rabbitTemplate.convertAndSend(RabbitMqConfig.HEALTH_ANALYSIS_QUEUE, silverId);
+                    }
+                });
+            } else {
+                // 혹시라도 트랜잭션이 없는 상태에서 호출될 경우를 대비한 방어 코드
+                rabbitTemplate.convertAndSend(RabbitMqConfig.HEALTH_ANALYSIS_QUEUE, silverId);
+            }
 
-            String analysisResult = triggerSlidingWindowAnalysis(silverId);
-            return ApiResponse.success("분석 완료 및 결과 반환", analysisResult);
-
+            return ApiResponse.success("데이터 수집 완료. 분석이 백그라운드에서 시작됩니다");
         } catch (Exception e) {
             log.error("데이터 처리 실패: {}", e.getMessage(), e);
             return ApiResponse.error("처리 중 오류 발생", e.getClass().getSimpleName());
         }
     }
 
+    
+    // 데이터 연속성 보장을 위한 결측치 보간
     private void fillMissingDataPoints(HealthLog lastLog, LocalDateTime newRecordTime) {
         LocalDateTime lastRecordTime = lastLog.getLogDate();
         if (lastRecordTime == null) return;
@@ -154,11 +181,20 @@ public class LstmInferenceService {
         }
     }
 
-    private String triggerSlidingWindowAnalysis(String silverId) throws OrtException {
-        if (session == null) return "모델 로드 안됨";
+
+    // 슬라이딩 윈도우 기반의 시계열 데이터 전처리 및 분석 실행
+    @Transactional
+    public void triggerSlidingWindowAnalysis(String silverId) throws OrtException {
+        if (session == null) {
+            log.error("AI 분석 실패: ONNX 세션이 초기화되지 않았습니다.");
+            return;
+        }
 
         List<HealthLog> sequence = healthLogRepository.findTop6BySilverIdOrderByLogDateDesc(silverId);
-        if (sequence.size() < N_STEPS) return "INSUFFICIENT_DATA";
+        if (sequence.size() < N_STEPS) {
+            log.warn("AI 분석 스킵: 데이터 부족 ({} / {})", sequence.size(), N_STEPS);
+            return;
+        }
 
         Collections.reverse(sequence);
 
@@ -184,9 +220,10 @@ public class LstmInferenceService {
             seqContInput[idx + 7] = logData.isAwakeSleep() ? 1.0f : 0.0f;
         }
 
-        return runInference(silverId, seqContInput, staticInput);
+        runInference(silverId, seqContInput, staticInput);
     }
 
+    // 사용자 기본 정보(고정 피처) 전처리: 나이, 성별, RHR
     private float[] createStaticInput(String silverId) {
         // Optional로 안전하게 조회
         Silver silver = silverRepository.findByLoginId(silverId)
@@ -205,8 +242,8 @@ public class LstmInferenceService {
         return staticInput;
     }
 
-    /** 수정! JPA HealthResultLogRepository 사용 */
-    private String runInference(String silverId, float[] seqInput, float[] staticInput) throws OrtException {
+    // 모델 돌리기
+    private void runInference(String silverId, float[] seqInput, float[] staticInput) throws OrtException {
         try (OnnxTensor seqTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(seqInput), new long[]{1, N_STEPS, N_SEQ_FEATURES});
              OnnxTensor statTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(staticInput), new long[]{1, N_STATIC_FEATURES})) {
 
@@ -226,8 +263,7 @@ public class LstmInferenceService {
                 }
 
                 HealthStatus status = HealthStatus.values()[predictedClass];
-                String label = status.name();
-                log.info("추론 결과 저장: SilverId={}, Label={}", silverId, label);
+                log.info("추론 결과 저장: SilverId={}, Label={}", silverId, status);
 
                 // JPA로 분석 결과 저장
                 resultRepository.save(HealthResultLog.builder()
@@ -235,8 +271,6 @@ public class LstmInferenceService {
                         .label(status)
                         .logDate(LocalDateTime.now())
                         .build());
-
-                return label;
             }
         }
     }

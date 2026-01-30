@@ -23,6 +23,7 @@ public interface SilverRepository extends JpaRepository<Silver, Long> { // PK �
     @EntityGraph(attributePaths = {"images"})
     Optional<Silver> findByLoginId(String loginId);
 
+    
     // 전체 조회 시에도 N+1 문제를 방지하기 위해 findAll 재정의
     @Override
     @NonNull

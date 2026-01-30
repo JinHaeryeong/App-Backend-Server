@@ -52,24 +52,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                         //테스트용
-//                                .requestMatchers("/api/health/**").permitAll()
-//                                .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
-//                                .requestMatchers("/api/health/sequence-test").permitAll()
-//                                .requestMatchers("/api/health/test/guardians").permitAll()
                                 .requestMatchers("/api/health/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers("/api/guardians/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/caregivers/by-silver/**").hasAnyRole("USER", "ADMIN")
 
-                        // 2. 보호자 API는 인증된 사용자만 접근 허용
-                        //    (토큰이 유효해야 403 에러가 해결됩니다.)
+                        // 보호자 API는 인증된 사용자만 접근 허용
+                        //    (토큰이 유효해야 403 에러가 해결됨)
                         .requestMatchers("/api/guardians/**").authenticated()
                         .requestMatchers("/api/caregivers/**").permitAll()
 
                                 // 로그인과 회원가입 경로는 인증 없이 접근 허용
-                        // 죄송한데 실험용으로 걍 전부 허용할게요
-//                                .anyRequest().permitAll()
-                        // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

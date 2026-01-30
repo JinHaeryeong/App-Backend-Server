@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -21,6 +22,21 @@ public class HealthService {
     private final HealthLogRepository healthLogRepository;
     private final DailyHealthLogRepository dailyHealthLogRepository;
 
+
+    // 공통 빌더 메서드
+    private DailyHealthLog buildDailyHealthLog(String silverId, LocalDate logDate, DailyHealthLogRequest request, Long existingId) {
+        return DailyHealthLog.builder()
+                .id(existingId) // id가 null이면 신규 생성, 값이 있으면 업데이트로
+                .silverId(silverId)
+                .weight(request.getWeight())
+                .bloodSugar(request.getBloodSugar())
+                .bodyTemperature(request.getBodyTemperature())
+                .sleepScore(request.getSleepScore())
+                .systolicBloodPressure(request.getSystolicBloodPressure())
+                .diastolicBloodPressure(request.getDiastolicBloodPressure())
+                .logDate(logDate)
+                .build();
+    }
     @Transactional
     public ApiResponse<?> upsertDailyHealthLog(DailyHealthLogRequest summaryRequest) {
         String silverId = summaryRequest.getSilverId();
@@ -29,39 +45,14 @@ public class HealthService {
         try {
             // 기존 기록이 있는지 조회
             DailyHealthLog logEntry = dailyHealthLogRepository.findBySilverIdAndLogDate(silverId, logDate)
-                    .map(existing -> {
-                        // 데이터가 있으면 업데이트 (Builder를 통해 기존 ID 유지하며 값 변경)
-                        return DailyHealthLog.builder()
-                                .id(existing.getId())
-                                .silverId(silverId)
-                                .weight(summaryRequest.getWeight())
-                                .bloodSugar(summaryRequest.getBloodSugar())
-                                .bodyTemperature(summaryRequest.getBodyTemperature())
-                                .sleepScore(summaryRequest.getSleepScore())
-                                .systolicBloodPressure(summaryRequest.getSystolicBloodPressure())
-                                .diastolicBloodPressure(summaryRequest.getDiastolicBloodPressure())
-                                .logDate(logDate)
-                                .build();
-                    })
-                    .orElseGet(() -> {
-                        // 데이터가 없으면 신규 생성
-                        return DailyHealthLog.builder()
-                                .silverId(silverId)
-                                .weight(summaryRequest.getWeight())
-                                .bloodSugar(summaryRequest.getBloodSugar())
-                                .bodyTemperature(summaryRequest.getBodyTemperature())
-                                .sleepScore(summaryRequest.getSleepScore())
-                                .systolicBloodPressure(summaryRequest.getSystolicBloodPressure())
-                                .diastolicBloodPressure(summaryRequest.getDiastolicBloodPressure())
-                                .logDate(logDate)
-                                .build();
-                    });
+                    .map(existing -> buildDailyHealthLog(silverId, logDate, summaryRequest, existing.getId())) // 수정
+                    .orElseGet(() -> buildDailyHealthLog(silverId, logDate, summaryRequest, null));
 
             // 저장
             dailyHealthLogRepository.save(logEntry);
 
             log.info("일일 건강 데이터 저장/업데이트 성공: {}", silverId);
-            return ApiResponse.success("일일 건강 데이터 저장 완료", summaryRequest.getSystolicBloodPressure());
+            return ApiResponse.success("일일 건강 데이터 저장 완료", logEntry);
 
         } catch (Exception e) {
             log.error("일일 건강 데이터 처리 중 오류 발생: {}", silverId, e);

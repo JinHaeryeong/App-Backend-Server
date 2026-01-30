@@ -89,20 +89,31 @@ public class LstmInferenceService {
         }
     }
 
-    // save도 하고 count도 하니까
+    // 생체 신호 수집 및 비동기 분석 파이프라인 트리거
     @Transactional
     public ApiResponse<?> processAndAnalyze(HealthRequest dto) {
         String silverId = dto.getSilverId();
         try {
             LocalDateTime now = LocalDateTime.now();
 
+            Integer heartRate = (dto.getHeartRateAvg() != null)
+                    ? dto.getHeartRateAvg().intValue()
+                    : null;
+
+            if (heartRate == null) {
+                // 이미 선언된 DEFAULT_RHR을 (int)로 캐스팅해서 사용
+                heartRate = (int) DEFAULT_RHR;
+                log.warn("SilverId: {} - 심박수 데이터 누락으로 기본값({}) 적용", silverId, heartRate);
+            }
+
+
             // 코파일럿이 지적한 부분 값이 null인지 체크 해줘야 nullPointerException 안터짐
             HealthLog newLog = HealthLog.builder()
                     .silverId(silverId)
-                    .heartRate(dto.getHeartRateAvg() != null ? dto.getHeartRateAvg().intValue() : 70)
+                    .heartRate(heartRate)
                     .stepCount(dto.getWalkingSteps())
                     .caloriesBurned(dto.getTotalCaloriesBurned())
-                    .oxygen(dto.getSpo2() > 0 ? (double) dto.getSpo2() : null)
+                    .oxygen(dto.getSpo2() > 0 ? (double) dto.getSpo2() : 98.0)
                     .logDate(dto.getLogDate() != null ? dto.getLogDate() : now)
                     .totalSleepMin(dto.getSleepDurationMin() != null ? dto.getSleepDurationMin().intValue() : 0)
                     .deepMin(dto.getSleepStageDeepMin() != null ? dto.getSleepStageDeepMin().intValue() : 0)
@@ -128,7 +139,7 @@ public class LstmInferenceService {
                 return ApiResponse.success(String.format("데이터 축적 중 (%d/%d)", count, N_STEPS));
             }
             
-            // 현재 트랜잭션이 성공적으로 커밋된 직후에 MQ 메시지를 보냄
+            // 트랜잭션 커밋 완료 시점에 분석 메시지 발행 (이벤트 기반 비동기 처리)
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
@@ -148,6 +159,8 @@ public class LstmInferenceService {
         }
     }
 
+    
+    // 데이터 연속성 보장을 위한 결측치 보간
     private void fillMissingDataPoints(HealthLog lastLog, LocalDateTime newRecordTime) {
         LocalDateTime lastRecordTime = lastLog.getLogDate();
         if (lastRecordTime == null) return;
@@ -168,12 +181,20 @@ public class LstmInferenceService {
         }
     }
 
+
+    // 슬라이딩 윈도우 기반의 시계열 데이터 전처리 및 분석 실행
     @Transactional
-    void triggerSlidingWindowAnalysis(String silverId) throws OrtException {
-        if (session == null) return;
+    public void triggerSlidingWindowAnalysis(String silverId) throws OrtException {
+        if (session == null) {
+            log.error("AI 분석 실패: ONNX 세션이 초기화되지 않았습니다.");
+            return;
+        }
 
         List<HealthLog> sequence = healthLogRepository.findTop6BySilverIdOrderByLogDateDesc(silverId);
-        if (sequence.size() < N_STEPS) return;
+        if (sequence.size() < N_STEPS) {
+            log.warn("AI 분석 스킵: 데이터 부족 ({} / {})", sequence.size(), N_STEPS);
+            return;
+        }
 
         Collections.reverse(sequence);
 
@@ -202,6 +223,7 @@ public class LstmInferenceService {
         runInference(silverId, seqContInput, staticInput);
     }
 
+    // 사용자 기본 정보(고정 피처) 전처리: 나이, 성별, RHR
     private float[] createStaticInput(String silverId) {
         // Optional로 안전하게 조회
         Silver silver = silverRepository.findByLoginId(silverId)
@@ -220,8 +242,8 @@ public class LstmInferenceService {
         return staticInput;
     }
 
-    /** 수정! JPA HealthResultLogRepository 사용 */
-    private String runInference(String silverId, float[] seqInput, float[] staticInput) throws OrtException {
+    // 모델 돌리기
+    private void runInference(String silverId, float[] seqInput, float[] staticInput) throws OrtException {
         try (OnnxTensor seqTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(seqInput), new long[]{1, N_STEPS, N_SEQ_FEATURES});
              OnnxTensor statTensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(staticInput), new long[]{1, N_STATIC_FEATURES})) {
 
@@ -249,8 +271,6 @@ public class LstmInferenceService {
                         .label(status)
                         .logDate(LocalDateTime.now())
                         .build());
-
-                return status.getKoreanLabel();
             }
         }
     }

@@ -6,7 +6,6 @@ import com.dasom.dasomServer.domain.silver.dto.SilverResponse;
 import com.dasom.dasomServer.domain.silver.entity.Silver;
 import com.dasom.dasomServer.domain.silver.entity.SilverImage;
 import com.dasom.dasomServer.domain.silver.repository.RefreshTokenRepository;
-import com.dasom.dasomServer.domain.silver.repository.SilverImageRepository;
 import com.dasom.dasomServer.domain.silver.repository.SilverRepository;
 import com.dasom.dasomServer.global.security.JwtTokenProvider;
 import com.dasom.dasomServer.infra.storage.ImageService;
@@ -19,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,7 +99,7 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public LoginResponse authenticateUser(String loginId, String rawPassword) {
         // 사용자 및 이미지 한방에 조회 (@EntityGraph 적용된 메서드)
         Silver silver = silverRepository.findByLoginId(loginId)
@@ -134,6 +132,8 @@ public class SilverServiceImpl implements UserService { // 인터페이스 명�
                 .build();
     }
 
+
+    @Override
     @Transactional
     public void logout(String loginId) {
         // DB에서 리프레시 토큰을 찾아 삭제 (없으면 그냥 넘어감)

@@ -11,8 +11,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     Optional<RefreshToken> findBySilverId(String silverId);
 
-    Optional<RefreshToken> findByRefreshToken(String refreshToken);
-
     @Modifying
     @Transactional
     void deleteBySilverId(String silverId);

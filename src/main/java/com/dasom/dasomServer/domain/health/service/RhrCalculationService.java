@@ -1,8 +1,8 @@
 package com.dasom.dasomServer.domain.health.service;
 
 import com.dasom.dasomServer.domain.health.repository.HealthLogRepository;
-import com.dasom.dasomServer.domain.silver.entity.Silver;
-import com.dasom.dasomServer.domain.silver.repository.SilverRepository;
+import com.dasom.dasomServer.silver.domain.Silver;
+import com.dasom.dasomServer.silver.infrastructure.SilverRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -4,7 +4,7 @@ import com.dasom.dasomServer.domain.health.entity.DailyHealthLog;
 import com.dasom.dasomServer.domain.health.entity.HealthLog;
 import com.dasom.dasomServer.domain.health.repository.DailyHealthLogRepository;
 import com.dasom.dasomServer.domain.health.repository.HealthLogRepository;
-import com.dasom.dasomServer.global.common.ApiResponse;
+import com.dasom.dasomServer.shared.common.ApiResponse;
 import com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

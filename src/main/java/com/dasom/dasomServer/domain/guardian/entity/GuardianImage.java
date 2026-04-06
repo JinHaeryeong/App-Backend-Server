@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.guardian.entity;
 
-import com.dasom.dasomServer.global.entity.BaseImage;
+import com.dasom.dasomServer.shared.domain.BaseImage;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

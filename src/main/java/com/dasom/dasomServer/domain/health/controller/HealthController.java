@@ -2,7 +2,7 @@ package com.dasom.dasomServer.domain.health.controller;
 
 
 import com.dasom.dasomServer.domain.health.entity.HealthLog;
-import com.dasom.dasomServer.global.common.ApiResponse;
+import com.dasom.dasomServer.shared.common.ApiResponse;
 import com.dasom.dasomServer.domain.health.dto.DailyHealthLogRequest;
 import com.dasom.dasomServer.domain.health.dto.HealthRequest;
 import com.dasom.dasomServer.domain.health.service.HealthService;

@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.domain.caregiver.entity;
 
-import com.dasom.dasomServer.domain.silver.entity.Silver;
+import com.dasom.dasomServer.silver.domain.Silver;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

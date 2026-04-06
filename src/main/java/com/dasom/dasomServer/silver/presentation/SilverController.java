@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -26,6 +27,12 @@ public class SilverController {
 
     private final UserService userService;
 
+    @Value("${jwt.cookie-secure}")
+    private boolean cookieSecure;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
+
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SignupResponse> createUser(
             @RequestPart("user") @Valid SignupRequest request,
@@ -44,9 +51,9 @@ public class SilverController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(false) // 배포시에는 변경필요
+                .secure(cookieSecure)
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60) // 7일 유효
+                .maxAge(refreshTokenExpiration / 1000)
                 .sameSite("Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

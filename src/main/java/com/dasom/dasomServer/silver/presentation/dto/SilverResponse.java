@@ -2,11 +2,9 @@ package com.dasom.dasomServer.silver.presentation.dto;
 
 import com.dasom.dasomServer.silver.domain.Silver;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Builder
@@ -19,7 +17,7 @@ public class SilverResponse {
     private Long caregiverId;
     private String profileImageUrl;
 
-    public static SilverResponse from(Silver silver) {
+    public static SilverResponse from(Silver silver, String fullImageUrl) {
         return SilverResponse.builder()
                 .id(silver.getId())
                 .loginId(silver.getLoginId())
@@ -27,7 +25,7 @@ public class SilverResponse {
                 .gender(silver.getGender())
                 .birthday(silver.getBirthday())
                 .caregiverId(silver.getCaregiver() != null ? silver.getCaregiver().getId() : null)
-                .profileImageUrl(silver.getProfileImageUrl())
+                .profileImageUrl(fullImageUrl)
                 .build();
     }
 }

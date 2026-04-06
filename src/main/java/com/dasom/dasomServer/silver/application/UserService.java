@@ -13,6 +13,7 @@ import com.dasom.dasomServer.infra.storage.ImageService;
 import com.dasom.dasomServer.shared.error.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,11 +48,8 @@ public class UserService {
     @Transactional
     public LoginResponse authenticateUser(String loginId, String rawPassword) {
         Silver silver = findSilverByLoginId(loginId);
-
         silver.checkPassword(passwordEncoder, rawPassword);
-
         TokenDto tokenDto = jwtTokenProvider.createToken(silver.getLoginId(), "ROLE_USER");
-
         saveOrUpdateRefreshToken(silver.getLoginId(), tokenDto.getRefreshToken());
 
         return LoginResponse.from(
@@ -64,18 +62,23 @@ public class UserService {
 
     public SilverResponse getUser(Long id, String currentLoginId) {
         Silver silver = silverRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 계정입니다."));
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
         if (!silver.getLoginId().equals(currentLoginId)) {
-            throw new IllegalArgumentException("본인 정보만 조회할 수 있습니다.");
+            throw new AccessDeniedException("본인 정보만 조회할 수 있습니다.");
         }
 
-        return SilverResponse.from(silver);
+        String fullUrl = imageService.getFileUrl(silver.getProfileImageUrl());
+
+        return SilverResponse.from(silver, fullUrl);
     }
 
     public List<SilverResponse> getAllUsers() {
         return silverRepository.findAll().stream()
-                .map(SilverResponse::from)
+                .map(silver -> {
+                    String fullUrl = imageService.getFileUrl(silver.getProfileImageUrl());
+                    return SilverResponse.from(silver, fullUrl);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -105,6 +108,7 @@ public class UserService {
 
     private String uploadProfileImage(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
+
         try {
             return imageService.saveFile(file);
         } catch (IOException e) {

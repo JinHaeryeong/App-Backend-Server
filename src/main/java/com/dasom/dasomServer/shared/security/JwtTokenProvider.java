@@ -1,24 +1,19 @@
 package com.dasom.dasomServer.shared.security;
 
-import com.dasom.dasomServer.silver.domain.RefreshToken; // 엔티티 임포트
-import com.dasom.dasomServer.silver.infrastructure.RefreshTokenRepository; // 리포지토리 임포트
 import com.dasom.dasomServer.silver.application.UserDetailService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional; // @Transactional 추가
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor

@@ -1,11 +1,10 @@
 package com.dasom.dasomServer.caregiver.domain;
 
+import com.dasom.dasomServer.shared.domain.BaseTimeEntity;
 import com.dasom.dasomServer.silver.domain.Silver;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +13,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Caregiver {
+@Table(name = "caregivers")
+public class Caregiver extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +23,12 @@ public class Caregiver {
     @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
     private String name;
+
     private String affiliation;
     private String tel;
     private String gender;
@@ -35,15 +39,14 @@ public class Caregiver {
     @Builder.Default
     private String role = "caregiver";
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private Timestamp createdAt;
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
 
     @OneToMany(mappedBy = "caregiver")
     @Builder.Default
     private List<Silver> silvers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<CaregiverImage> images = new ArrayList<>();
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 }

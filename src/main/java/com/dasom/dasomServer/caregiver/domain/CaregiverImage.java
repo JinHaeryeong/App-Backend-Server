@@ -1,12 +1,12 @@
-package com.dasom.dasomServer.domain.caregiver.entity;
+package com.dasom.dasomServer.caregiver.domain;
 
 import com.dasom.dasomServer.shared.domain.BaseImage;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "caregivers_images")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CaregiverImage extends BaseImage {
 

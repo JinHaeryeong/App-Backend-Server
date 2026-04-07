@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.silver.domain;
 
-import com.dasom.dasomServer.domain.caregiver.entity.Caregiver;
+import com.dasom.dasomServer.caregiver.domain.Caregiver;
 import com.dasom.dasomServer.shared.domain.BaseTimeEntity;
 import com.dasom.dasomServer.silver.presentation.dto.SignupRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;

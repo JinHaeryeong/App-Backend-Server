@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.domain.caregiver.entity;
+package com.dasom.dasomServer.caregiver.domain;
 
 import com.dasom.dasomServer.silver.domain.Silver;
 import jakarta.persistence.*;
@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "caregivers")
 @Getter
 @Builder
 @AllArgsConstructor
@@ -40,12 +39,10 @@ public class Caregiver {
     @Column(name = "created_at", updatable = false)
     private Timestamp createdAt;
 
-    // 1:N 관계 (생활지원사 1 : 어르신 N)
     @OneToMany(mappedBy = "caregiver")
     @Builder.Default
     private List<Silver> silvers = new ArrayList<>();
 
-    // 1:N 관계 (생활지원사 1 : 이미지 N)
     @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<CaregiverImage> images = new ArrayList<>();

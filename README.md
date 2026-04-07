@@ -1,4 +1,4 @@
-# AI Care Hub Frontend
+# AI Care Hub
 
 <img width="1394" height="478" alt="logo" src="https://github.com/user-attachments/assets/d0caf976-b5a2-449c-9c65-ecfdd9d01c93" />
 다솜마을은 요양사와 보호자를 위한 지능형 어르신 관리 시스템입니다. AI 기반 건강 데이터 분석과 실시간 모니터링을 통해 어르신의 건강 상태를 체계적으로 관리할 수 있습니다.
@@ -62,20 +62,20 @@
 │  │  │     └─ dasom
 │  │  │        └─ dasomServer
 │  │  │           ├─ DasomServerApplication.java
+│  │  │           ├─ caregiver
+│  │  │           │  ├─ application
+│  │  │           │  │  └─ CaregiverService.java
+│  │  │           │  ├─ domain
+│  │  │           │  │  ├─ Caregiver.java
+│  │  │           │  │  └─ CaregiverRepository.java
+│  │  │           │  ├─ infrastructure
+│  │  │           │  │  ├─ CaregiverJpaRepository.java
+│  │  │           │  │  └─ CaregiverRepositoryImpl.java
+│  │  │           │  └─ presentation
+│  │  │           │     ├─ CaregiverController.java
+│  │  │           │     └─ dto
+│  │  │           │        └─ CaregiverResponse.java
 │  │  │           ├─ domain
-│  │  │           │  ├─ caregiver
-│  │  │           │  │  ├─ controller
-│  │  │           │  │  │  └─ CaregiverController.java
-│  │  │           │  │  ├─ dto
-│  │  │           │  │  │  └─ CaregiverResponse.java
-│  │  │           │  │  ├─ entity
-│  │  │           │  │  │  ├─ Caregiver.java
-│  │  │           │  │  │  └─ CaregiverImage.java
-│  │  │           │  │  ├─ repository
-│  │  │           │  │  │  ├─ CaregiverImageRepository.java
-│  │  │           │  │  │  └─ CaregiverRepository.java
-│  │  │           │  │  └─ service
-│  │  │           │  │     └─ CaregiverService.java
 │  │  │           │  ├─ guardian
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  └─ GuardianController.java
@@ -89,66 +89,68 @@
 │  │  │           │  │  │  └─ GuardianRepository.java
 │  │  │           │  │  └─ service
 │  │  │           │  │     └─ GuardianService.java
-│  │  │           │  ├─ health
-│  │  │           │  │  ├─ controller
-│  │  │           │  │  │  └─ HealthController.java
-│  │  │           │  │  ├─ dto
-│  │  │           │  │  │  ├─ DailyHealthLogRequest.java
-│  │  │           │  │  │  ├─ HealthRequest.java
-│  │  │           │  │  │  └─ UserHealthResponse.java
-│  │  │           │  │  ├─ entity
-│  │  │           │  │  │  ├─ DailyHealthLog.java
-│  │  │           │  │  │  ├─ HealthLog.java
-│  │  │           │  │  │  ├─ HealthResultLog.java
-│  │  │           │  │  │  └─ HealthStatus.java
-│  │  │           │  │  ├─ repository
-│  │  │           │  │  │  ├─ DailyHealthLogRepository.java
-│  │  │           │  │  │  ├─ HealthLogRepository.java
-│  │  │           │  │  │  └─ HealthResultLogRepository.java
-│  │  │           │  │  └─ service
-│  │  │           │  │     ├─ HealthService.java
-│  │  │           │  │     └─ RhrCalculationService.java
-│  │  │           │  └─ silver
+│  │  │           │  └─ health
 │  │  │           │     ├─ controller
-│  │  │           │     │  └─ SilverController.java
+│  │  │           │     │  └─ HealthController.java
 │  │  │           │     ├─ dto
-│  │  │           │     │  ├─ LoginRequest.java
-│  │  │           │     │  ├─ LoginResponse.java
-│  │  │           │     │  ├─ RegisterRequest.java
-│  │  │           │     │  └─ SilverResponse.java
+│  │  │           │     │  ├─ DailyHealthLogRequest.java
+│  │  │           │     │  ├─ HealthRequest.java
+│  │  │           │     │  └─ UserHealthResponse.java
 │  │  │           │     ├─ entity
-│  │  │           │     │  ├─ RefreshToken.java
-│  │  │           │     │  ├─ Silver.java
-│  │  │           │     │  └─ SilverImage.java
+│  │  │           │     │  ├─ DailyHealthLog.java
+│  │  │           │     │  ├─ HealthLog.java
+│  │  │           │     │  ├─ HealthResultLog.java
+│  │  │           │     │  └─ HealthStatus.java
 │  │  │           │     ├─ repository
-│  │  │           │     │  ├─ RefreshTokenRepository.java
-│  │  │           │     │  ├─ SilverImageRepository.java
-│  │  │           │     │  └─ SilverRepository.java
+│  │  │           │     │  ├─ DailyHealthLogRepository.java
+│  │  │           │     │  ├─ HealthLogRepository.java
+│  │  │           │     │  └─ HealthResultLogRepository.java
 │  │  │           │     └─ service
-│  │  │           │        ├─ SilverServiceImpl.java
-│  │  │           │        ├─ UserDetailService.java
-│  │  │           │        └─ UserService.java
-│  │  │           ├─ global
+│  │  │           │        ├─ HealthService.java
+│  │  │           │        └─ RhrCalculationService.java
+│  │  │           ├─ infra
+│  │  │           │  ├─ ai
+│  │  │           │  │  ├─ LstmAnalysisConsumer.java
+│  │  │           │  │  ├─ LstmInferenceService.java
+│  │  │           │  │  └─ LstmInputScaler.java
+│  │  │           │  └─ storage
+│  │  │           │     └─ ImageService.java
+│  │  │           ├─ shared
 │  │  │           │  ├─ common
 │  │  │           │  │  └─ ApiResponse.java
 │  │  │           │  ├─ config
 │  │  │           │  │  ├─ RabbitMqConfig.java
 │  │  │           │  │  ├─ SecurityConfig.java
 │  │  │           │  │  └─ WebConfig.java
-│  │  │           │  ├─ dto
-│  │  │           │  │  └─ BaseImage.java
-│  │  │           │  ├─ entity
-│  │  │           │  │  └─ BaseImage.java
+│  │  │           │  ├─ domain
+│  │  │           │  │  ├─ BaseImage.java
+│  │  │           │  │  └─ BaseTimeEntity.java
+│  │  │           │  ├─ error
+│  │  │           │  │  ├─ GlobalExceptionHandler.java
+│  │  │           │  │  └─ exception
+│  │  │           │  │     └─ UserNotFoundException.java
 │  │  │           │  └─ security
 │  │  │           │     ├─ JwtAuthenticationFilter.java
-│  │  │           │     └─ JwtTokenProvider.java
-│  │  │           └─ infra
-│  │  │              ├─ ai
-│  │  │              │  ├─ LstmAnalysisConsumer.java
-│  │  │              │  ├─ LstmInferenceService.java
-│  │  │              │  └─ LstmInputScaler.java
-│  │  │              └─ storage
-│  │  │                 └─ ImageService.java
+│  │  │           │     ├─ JwtTokenProvider.java
+│  │  │           │     └─ TokenDto.java
+│  │  │           └─ silver
+│  │  │              ├─ application
+│  │  │              │  ├─ UserDetailService.java
+│  │  │              │  └─ UserService.java
+│  │  │              ├─ domain
+│  │  │              │  ├─ RefreshToken.java
+│  │  │              │  └─ Silver.java
+│  │  │              ├─ infrastructure
+│  │  │              │  ├─ RefreshTokenRepository.java
+│  │  │              │  └─ SilverRepository.java
+│  │  │              └─ presentation
+│  │  │                 ├─ SilverController.java
+│  │  │                 └─ dto
+│  │  │                    ├─ LoginRequest.java
+│  │  │                    ├─ LoginResponse.java
+│  │  │                    ├─ SignupRequest.java
+│  │  │                    ├─ SignupResponse.java
+│  │  │                    └─ SilverResponse.java
 │  │  └─ resources
 │  │     ├─ application.yml
 │  │     └─ model
@@ -159,11 +161,6 @@
 │           └─ dasom
 │              └─ dasomServer
 │                 └─ DasomServerApplicationTests.java
-├─ testScript
-│  ├─ healthy_test.js
-│  ├─ list_test.js
-│  ├─ stress_test.js
-│  └─ test.js
 └─ uploads
    ├─ 37e35d05-2f73-43f0-8379-0d70ef309fc2.jpg
    ├─ 70c4f540-eb0a-4a4f-a8ec-f5b7ecaedbaf.jpg

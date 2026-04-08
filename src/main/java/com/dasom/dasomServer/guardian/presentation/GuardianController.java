@@ -19,9 +19,10 @@ public class GuardianController {
 
     private final GuardianService guardianService;
 
-    @GetMapping("/{silverId}")
-    public ResponseEntity<ApiResponse<List<GuardianResponse>>> getGuardiansBySilverId(@PathVariable String silverId) {
-        List<GuardianResponse> guardians = guardianService.getGuardiansForApp(silverId);
+    @GetMapping("/by-silver/{silverLoginId}")
+    public ResponseEntity<ApiResponse<List<GuardianResponse>>> getGuardiansBySilverLoginId(
+            @PathVariable String silverLoginId) {
+        List<GuardianResponse> guardians = guardianService.getGuardiansForApp(silverLoginId);
         return ResponseEntity.ok(ApiResponse.success("보호자 목록 조회 성공", guardians));
     }
 }

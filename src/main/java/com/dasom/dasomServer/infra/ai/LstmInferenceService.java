@@ -4,7 +4,11 @@ import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
-import com.dasom.dasomServer.health.domain.*;
+import com.dasom.dasomServer.health.domain.HealthLog;
+import com.dasom.dasomServer.health.domain.HealthLogRepository;
+import com.dasom.dasomServer.health.domain.HealthResultLog;
+import com.dasom.dasomServer.health.domain.HealthResultLogRepository;
+import com.dasom.dasomServer.health.domain.HealthStatus;
 import com.dasom.dasomServer.health.presentation.dto.HealthDataRequest;
 import com.dasom.dasomServer.silver.domain.Silver;
 import com.dasom.dasomServer.silver.infrastructure.SilverRepository;
@@ -134,10 +138,6 @@ public class LstmInferenceService {
         runInference(silverId, seqInput, staticInput);
     }
 
-    // -------------------------------------------------------------------------
-    // private helpers
-    // -------------------------------------------------------------------------
-
     private HealthLog buildHealthLog(HealthDataRequest request) {
         LocalDateTime logDate = request.getLogDate() != null
                 ? request.getLogDate()
@@ -226,7 +226,8 @@ public class LstmInferenceService {
         Silver silver = silverRepository.findByLoginId(silverId)
                 .orElseThrow(() -> new RuntimeException("어르신을 찾을 수 없습니다: " + silverId));
 
-        int age = (int) ChronoUnit.YEARS.between(silver.getBirthday().toLocalDate(), LocalDate.now());
+        LocalDate birthday = silver.getBirthday() != null ? silver.getBirthday().toLocalDate() : LocalDate.of(1950, 1, 1);
+        int age = (int) ChronoUnit.YEARS.between(birthday, LocalDate.now());
         float genderValue = (silver.getGender() == 'M' || silver.getGender() == 'm') ? 1.0f : 0.0f;
         double validRhr   = (silver.getRhr() != null && silver.getRhr() > 0) ? silver.getRhr() : DEFAULT_RHR;
 

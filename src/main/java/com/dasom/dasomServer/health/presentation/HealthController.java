@@ -24,6 +24,8 @@ public class HealthController {
 
     private final HealthService healthService;
     private final LstmInferenceService lstmInferenceService;
+    
+    // 리팩토링하면서 API 엔드포인트의 이름들을 좀 더 명확하게 바꿨음
 
     /**
      * POST /api/health/logs

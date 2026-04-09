@@ -1,6 +1,6 @@
 package com.dasom.dasomServer.infra.ai;
 
-import com.dasom.dasomServer.domain.health.repository.HealthResultLogRepository;
+import com.dasom.dasomServer.health.domain.HealthResultLogRepository;
 import com.dasom.dasomServer.shared.config.RabbitMqConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

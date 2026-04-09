@@ -1,28 +1,26 @@
-package com.dasom.dasomServer.domain.health.dto;
+package com.dasom.dasomServer.health.presentation.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@NoArgsConstructor
 public class DailyHealthLogRequest {
+
+    @NotBlank(message = "silverId는 필수입니다")
     private String silverId;
 
-    // 혈압 (INT)
     private Integer systolicBloodPressure;
     private Integer diastolicBloodPressure;
-
-    // 혈당 (INT)
     private Integer bloodSugar;
-
-    // 체중 (DECIMAL)
     private Double weight;
-
-    // 체온 (DECIMAL)
     private Double bodyTemperature;
-
-    // 수면 점수 (INT)
     private Integer sleepScore;
 
+    @NotNull(message = "logDate는 필수입니다")
     private LocalDate logDate;
 }

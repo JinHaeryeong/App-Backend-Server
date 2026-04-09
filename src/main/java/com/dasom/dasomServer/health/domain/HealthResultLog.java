@@ -1,4 +1,4 @@
-package com.dasom.dasomServer.domain.health.entity;
+package com.dasom.dasomServer.health.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,5 +27,3 @@ public class HealthResultLog {
     @Column(name = "log_date")
     private LocalDateTime logDate;
 }
-
-// 상태 관리를 위한 Enum

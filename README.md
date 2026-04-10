@@ -115,11 +115,12 @@
 │  │  │           │        └─ HealthLogResponse.java
 │  │  │           ├─ infra
 │  │  │           │  ├─ ai
-│  │  │           │  │  ├─ LstmAnalysisConsumer.java
-│  │  │           │  │  ├─ LstmInferenceService.java
-│  │  │           │  │  └─ LstmInputScaler.java
-│  │  │           │  └─ storage
-│  │  │           │     └─ ImageService.java
+│  │  │           │  │  ├─ HealthAnalysisPipeline.java
+│  │  │           │  │  ├─ LstmInferenceEngine.java
+│  │  │           │  │  ├─ LstmInputScaler.java
+│  │  │           │  │  └─ LstmModelSession.java
+│  │  │           │  └─ messaging
+│  │  │           │     └─ HealthAnalysisConsumer.java
 │  │  │           ├─ shared
 │  │  │           │  ├─ common
 │  │  │           │  │  └─ ApiResponse.java
@@ -134,6 +135,8 @@
 │  │  │           │  │  ├─ GlobalExceptionHandler.java
 │  │  │           │  │  └─ exception
 │  │  │           │  │     └─ UserNotFoundException.java
+│  │  │           │  ├─ file
+│  │  │           │  │  └─ FileStorageService.java
 │  │  │           │  └─ security
 │  │  │           │     ├─ JwtAuthenticationFilter.java
 │  │  │           │     ├─ JwtTokenProvider.java

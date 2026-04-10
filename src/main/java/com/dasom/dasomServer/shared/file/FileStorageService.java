@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Slf4j
@@ -23,18 +25,20 @@ public class FileStorageService {
         ensureUploadDirectoryExists();
 
         String storedFilename = generateUniqueFilename(file.getOriginalFilename());
-        File dest = new File(uploadDir + File.separator + storedFilename);
-        file.transferTo(dest);
 
-        log.info("파일 저장 완료: {}", dest.getAbsolutePath());
+        Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path targetPath = rootPath.resolve(storedFilename).normalize();
+
+        if (!targetPath.startsWith(rootPath)) {
+            throw new IOException("유효하지 않은 파일 경로입니다: " + storedFilename);
+        }
+
+        file.transferTo(targetPath.toFile());
+
+        log.info("파일 저장 완료: {}", targetPath);
         return storedFilename;
     }
 
-    /**
-     * DB에 저장된 파일명을 클라이언트 접근 URL로 변환
-     *
-     * @return 접근 URL, 파일명이 없으면 null
-     */
     public String toUrl(String storedFilename) {
         if (storedFilename == null || storedFilename.isBlank()) {
             return null;
@@ -45,6 +49,11 @@ public class FileStorageService {
 
     private void ensureUploadDirectoryExists() throws IOException {
         File directory = new File(uploadDir);
+
+        if (directory.exists() && !directory.isDirectory()) {
+            throw new IOException("업로드 경로가 디렉토리가 아닙니다: " + uploadDir);
+        }
+
         if (!directory.exists() && !directory.mkdirs()) {
             log.error("업로드 디렉토리 생성 실패: {}", uploadDir);
             throw new IOException("파일 저장 경로를 생성할 수 없습니다: " + uploadDir);
@@ -60,6 +69,9 @@ public class FileStorageService {
 
     private String extractExtension(String filename) {
         int dotIndex = filename.lastIndexOf('.');
-        return dotIndex != -1 ? filename.substring(dotIndex) : ".dat";
+        if (dotIndex == -1) return ".dat";
+
+        String ext = filename.substring(dotIndex);
+        return ext.replaceAll("[^.a-zA-Z0-9]", "");
     }
 }

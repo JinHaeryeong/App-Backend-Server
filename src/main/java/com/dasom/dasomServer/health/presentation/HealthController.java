@@ -5,7 +5,7 @@ import com.dasom.dasomServer.health.domain.DailyHealthLog;
 import com.dasom.dasomServer.health.presentation.dto.DailyHealthLogRequest;
 import com.dasom.dasomServer.health.presentation.dto.HealthDataRequest;
 import com.dasom.dasomServer.health.presentation.dto.HealthLogResponse;
-import com.dasom.dasomServer.infra.ai.LstmInferenceService;
+import com.dasom.dasomServer.infra.ai.HealthAnalysisPipeline;
 import com.dasom.dasomServer.shared.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.List;
 public class HealthController {
 
     private final HealthService healthService;
-    private final LstmInferenceService lstmInferenceService;
+    private final HealthAnalysisPipeline healthAnalysisPipeline;
     
     // 리팩토링하면서 API 엔드포인트의 이름들을 좀 더 명확하게 바꿨음
 
@@ -36,7 +36,7 @@ public class HealthController {
             @Valid @RequestBody HealthDataRequest request) {
         log.info("건강 데이터 수신: silverId={}", request.getSilverId());
 
-        ApiResponse<?> response = lstmInferenceService.processAndAnalyze(request);
+        ApiResponse<?> response = healthAnalysisPipeline.collectAndPublish(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

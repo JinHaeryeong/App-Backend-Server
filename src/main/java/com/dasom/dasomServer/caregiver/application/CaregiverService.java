@@ -3,7 +3,7 @@ package com.dasom.dasomServer.caregiver.application;
 import com.dasom.dasomServer.caregiver.domain.Caregiver;
 import com.dasom.dasomServer.caregiver.domain.CaregiverRepository;
 import com.dasom.dasomServer.caregiver.presentation.dto.CaregiverResponse;
-import com.dasom.dasomServer.infra.storage.ImageService;
+import com.dasom.dasomServer.shared.file.FileStorageService;
 import com.dasom.dasomServer.shared.error.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CaregiverService {
 
     private final CaregiverRepository caregiverRepository;
-    private final ImageService imageService;
+    private final FileStorageService fileStorageService;
 
     public CaregiverResponse getCaregiverById(Long caregiverId) {
         Caregiver caregiver = caregiverRepository.findById(caregiverId)
@@ -38,7 +38,7 @@ public class CaregiverService {
     private CaregiverResponse toResponse(Caregiver caregiver) {
         String fileName = caregiver.getProfileImageUrl();
 
-        String fullUrl = (fileName != null) ? imageService.getFileUrl(fileName) : null;
+        String fullUrl = (fileName != null) ? fileStorageService.toUrl(fileName) : null;
 
         return CaregiverResponse.of(caregiver, fullUrl);
     }

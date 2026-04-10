@@ -9,7 +9,7 @@ import com.dasom.dasomServer.silver.domain.Silver;
 import com.dasom.dasomServer.silver.infrastructure.RefreshTokenRepository;
 import com.dasom.dasomServer.silver.infrastructure.SilverRepository;
 import com.dasom.dasomServer.shared.security.JwtTokenProvider;
-import com.dasom.dasomServer.infra.storage.ImageService;
+import com.dasom.dasomServer.shared.file.FileStorageService;
 import com.dasom.dasomServer.shared.error.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class UserService {
     private final SilverRepository silverRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ImageService imageService;
+    private final FileStorageService fileStorageService;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
@@ -68,7 +68,7 @@ public class UserService {
             throw new AccessDeniedException("본인 정보만 조회할 수 있습니다.");
         }
 
-        String fullUrl = imageService.getFileUrl(silver.getProfileImageUrl());
+        String fullUrl = fileStorageService.toUrl(silver.getProfileImageUrl());
 
         return SilverResponse.from(silver, fullUrl);
     }
@@ -76,7 +76,7 @@ public class UserService {
     public List<SilverResponse> getAllUsers() {
         return silverRepository.findAll().stream()
                 .map(silver -> {
-                    String fullUrl = imageService.getFileUrl(silver.getProfileImageUrl());
+                    String fullUrl = fileStorageService.toUrl(silver.getProfileImageUrl());
                     return SilverResponse.from(silver, fullUrl);
                 })
                 .collect(Collectors.toList());
@@ -110,7 +110,7 @@ public class UserService {
         if (file == null || file.isEmpty()) return null;
 
         try {
-            return imageService.saveFile(file);
+            return fileStorageService.save(file);
         } catch (IOException e) {
             throw new RuntimeException("프로필 이미지 업로드 실패", e);
         }
